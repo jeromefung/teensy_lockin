@@ -1,0 +1,10 @@
+
+*.swp
+*.m~
+*.asv
+*.pyc
+
+octave-workspace
+
+.DS_Store
+
