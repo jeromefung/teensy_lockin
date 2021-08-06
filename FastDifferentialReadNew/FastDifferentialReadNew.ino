@@ -44,7 +44,7 @@ int measCtr = 0;
 bool validDiff;
 
 // IIR filter order
-const int numCoeffs = 2;
+const int numCoeffs = 3;
 double a[numCoeffs];
 double b[numCoeffs];
 
@@ -89,7 +89,7 @@ void setup() {
   
   // Print some dividing lines
   for (int i = 0; i < 10; i++){
-    Serial.println("Filtered data follows");
+    //Serial.println("Filtered data follows");
   }
 
   // Calculate coefficients and filter the signal
@@ -117,11 +117,22 @@ void measureSignal() {
 void calcFilterCoeffs() {
   // Currently, implement single-pole recursive filtering. See
   // http://www.dspguide.com/ch19/2.htm
-  double filterX = exp(-2*PI*cutoffFreq/samplingRate);
-  a[0] = 1 - filterX;
-  a[1] = 0;
-  b[0] = 0; // Keep 0 for simplicity
-  b[1] = filterX;
+  //double filterX = exp(-2*PI*cutoffFreq/samplingRate);
+  //a[0] = 1 - filterX;
+  //a[1] = 0;
+  //a[2] = 0;
+  //b[0] = 0; // Keep 0 for simplicity
+  //b[1] = filterX;
+  //b[2] = 0;
+
+  // Try a Chebyshev set at f_c/f_sampling = 0.01, which is 10 Hz here.
+  a[0] = 8.663387e-4 ;
+  a[1] = 1.733678e-3 ;
+  a[2] = 8.663387e-4 ;
+  b[0] = 0;
+  b[1] = 1.919129;
+  b[2] = -9.225943e-1;
+  
 }
 
 void filterSignal(){
@@ -146,7 +157,7 @@ void filterSignal(){
         y_reg[coeffCtr] = y_reg[coeffCtr - 1];
       }
     }
-    Serial.println(yn, 16);
+    //Serial.println(yn, 16);
   }
 }
 
