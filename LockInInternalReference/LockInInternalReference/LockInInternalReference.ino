@@ -1,25 +1,24 @@
-/* LockInExternalReference.ino
+/* LockInInternalReference.ino
  *
- * Jerome Fung
+ * Chris Weil and Jerome Fung
  *
- * Perform lock-in detection of a signal with an external frequency reference
+ * Perform lock-in detection of a signal with an internal frequency reference
  * using a Teensy 3.5.
- *
- * External reference should be a square wave.
  *
  */
 
-#include <FreqCount.h>
+#include "SineLUT.h"
+#include <DMAChannel.h>
 #include <ADC.h>
 #include <math.h>
+
+// from Audio library pdb.h
+#define PDB_CONFIG (PDB_SC_TRGSEL(15) | PDB_SC_PDBEN | PDB_SC_CONT | PDB_SC_PDBIE | PDB_SC_DMAEN)
 
 // **************************************************************
 // Pin configurations
 // NO pushbutton to start operation. Connect 1 terminal to 23, the other to ground.
 const uint8_t buttonPin = 23;
-// FreqCount library used for frequency measuement requires reference signal
-// to be connected to pin 13.
-const uint8_t referencePin = 13;
 
 // Connect signal to be measured to analog pins A10/A11 (differential channel 3)
 const uint8_t pinP = A10;
@@ -29,18 +28,19 @@ const uint8_t pinN = A11;
 
 // **************************************************************
 // Global variables -- user set
-const unsigned long countPeriod_ms = 5000; // Count duration for reference frequency measurement
 const int measPeriod_us = 100; // 10 kHz sampling for signal acquisition
 const int nPts = 10000;
 const int cutoffFreq = 1.0; // for LP filtering, in Hz
+long sinFreq = 10000; // Hz
+const double referenceFreq = (double) sinFreq; // in Hz
 // **************************************************************
 
 
 // **************************************************************
 // Other global variables
 unsigned long edgeCounts;
-double referenceFreq;
 int samplingRate = 1000000/measPeriod_us; // in Hz
+const int analogOutPin = A21;
 
 short mySignal[nPts]; // the raw digitized signal of interest
 ADC *adc = new ADC(); // create ADC object
@@ -50,6 +50,8 @@ int measCtr = 0;
 int refVal, lastVal;
 
 IntervalTimer myTimer;
+
+DMAChannel dma1(true);
 
 // LP filter coefficients
 const int numCoeffs = 2;
@@ -65,6 +67,9 @@ void setup() {
   pinMode(pinP, INPUT);
   pinMode(pinN, INPUT);
 
+  // Functino for generating the internal frequency reference
+  generateReferenceWave();
+
   // ADC setup
   adc->adc0->differentialMode(); // TODO: is this needed? not sure.
   adc->adc0->setResolution(13); // A10, A11 connected to ADC1 only
@@ -77,13 +82,60 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   // Wait for button to be pressed
-  while (digitalRead(buttonPin) == 1) {
+  //while (digitalRead(buttonPin) == 1) {
     // do nothing
-  }
+  //}
+  delay(10000);
   Serial.println("Button Pressed");
 
   // Fold out measurement into a function that can be called repeatedly
   measureLockIn();
+}
+
+void generateReferenceWave() {
+  
+  // Set up clock gate for DAC0 (connected to A21)
+  // See Sec. 12.2.9 (p. 308) of manual.
+  // Also see values defined in kinetis.h
+  // Note |= is a C bitwise or
+  SIM_SCGC2 |= SIM_SCGC2_DAC0;
+
+  // Enable DAC0
+  // See manual p. 912, Sec. 37.4.4 and kinetis.h
+  DAC0_C0 = DAC_C0_DACEN | DAC_C0_DACRFS;
+
+  // Teensy Audio library ramps up to DC slowly (I guess this is better than slamming the DAC?)
+  // slowly ramp up to DC voltage, approx 1/4 second
+  for (int16_t i=0; i<=2048; i+=8) {
+    *(int16_t *)&(DAC0_DAT0L) = i;
+    delay(1);
+  }
+  
+  // Use Teensy DMAChannel library
+  dma1.begin(true);
+  dma1.disable(); // disable DMA
+  dma1.sourceBuffer(waveTable, LUT_SIZE * sizeof(uint16_t));
+  dma1.transferSize(2); // each value is 2 bytes
+  dma1.destination(*(volatile uint16_t *)&(DAC0_DAT0L)); // send to DAC
+  dma1.triggerAtHardwareEvent(DMAMUX_SOURCE_PDB); // set trigger to PDB
+  dma1.enable();
+
+  // Now set up PDB
+  SIM_SCGC6 |= SIM_SCGC6_PDB; // Enable PDB clock. Again, see manual and kinetis.h
+
+  // Calculate period between outputs
+  uint32_t mod = F_BUS / (sinFreq * LUT_SIZE) ;
+  delay(500);
+  Serial.println(mod);
+
+  // See manual p. 935, sec 39.3.2 for PDB0_MOD register
+  // Modulus of 1 actually means a period of 2 (counter resets back to 0 when it reaches PDB0_MOD)
+  PDB0_MOD = (uint16_t)(mod - 1); 
+  PDB0_IDLY = 0; // no delay
+  PDB0_SC = PDB_CONFIG | PDB_SC_LDOK; // load registers from buffers
+  PDB0_SC = PDB_CONFIG | PDB_SC_SWTRIG; // reset and restart
+  PDB0_CH0C1 = 0x0101; // Enable pre-trigger
+  
 }
 
 void measureLockIn() {
@@ -96,28 +148,6 @@ void measureLockIn() {
   // Reset flag and signal array index
   daqDone = false;
   measCtr = 0;
-
-  // Measure reference frequency
-  FreqCount.begin(countPeriod_ms);
-  while (FreqCount.available() == false) {
-    // Wait; do nothing
-  }
-  FreqCount.end();
-  edgeCounts = FreqCount.read();
-  referenceFreq = edgeCounts / (double) countPeriod_ms * 1000; // convert to get Hz
-
-  // Wait for rising edge of reference signal before starting digitization.
-  // Otherwise phase info is meaningless.
-  lastVal = digitalRead(referencePin);
-  while (true) {
-    refVal = digitalRead(referencePin);
-    if ((refVal == 1) && (lastVal ==0)) {
-      break;
-    }
-    else{
-      lastVal = refVal;
-    }
-  }
  
   // Digitize the signal
   myTimer.begin(digitizeSignal, measPeriod_us);
@@ -173,8 +203,8 @@ void mixAndFilter() {
     for (int coeffCtr = 0; coeffCtr < numCoeffs; coeffCtr++){
       sinTerm = sin(TWO_PI * referenceFreq * (n - coeffCtr) / samplingRate);
       cosTerm = cos(TWO_PI * referenceFreq * (n - coeffCtr) / samplingRate);
-      ynX = ynX + a[coeffCtr] * (double) mySignal[n - coeffCtr] * cosTerm  + b[coeffCtr] * yregX[coeffCtr];
-      ynY = ynY + a[coeffCtr] * (double) mySignal[n - coeffCtr] * sinTerm  + b[coeffCtr] * yregY[coeffCtr];
+      ynX = ynX + a[coeffCtr] * (double) mySignal[n - coeffCtr] * cosTerm  + b[coeffCtr] * yregX[coeffCtr]; // switched from sine to cosine
+      ynY = ynY + a[coeffCtr] * (double) mySignal[n - coeffCtr] * sinTerm  + b[coeffCtr] * yregY[coeffCtr]; // switched from cosine to sine
     }
     // Update registers, going backwards
     for (int coeffCtr = numCoeffs - 1; coeffCtr > 0; coeffCtr--){
@@ -196,9 +226,9 @@ void mixAndFilter() {
     Serial.print(", ");
     Serial.print(ynY);
     Serial.print(", ");
-    Serial.print(R);
+    Serial.print(R); // amplitude - will be 0.5 as much as input amplitude
     Serial.print(", ");
-    Serial.println(phi);
+    Serial.println(phi); // phase
   }
   
 }
