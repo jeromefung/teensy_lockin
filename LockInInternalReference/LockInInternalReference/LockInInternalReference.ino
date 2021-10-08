@@ -1,11 +1,8 @@
-/* LockInInternalReference.ino
- *
- * Chris Weil and Jerome Fung
- *
- * Perform lock-in detection of a signal with an internal frequency reference
- * using a Teensy 3.5.
- *
- */
+// python-build-start
+// upload
+// arduino:teensyduino:3.5
+// /dev/ttyACM0
+// python-build-end
 
 #include "SineLUT.h"
 #include <DMAChannel.h>

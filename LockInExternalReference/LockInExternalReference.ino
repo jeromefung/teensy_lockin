@@ -1,13 +1,8 @@
-/* LockInExternalReference.ino
- *
- * Jerome Fung
- *
- * Perform lock-in detection of a signal with an external frequency reference
- * using a Teensy 3.5.
- *
- * External reference should be a square wave.
- *
- */
+// python-build-start
+// upload
+// arduino:teensyduino:3.5
+// /dev/ttyACM0
+// python-build-end
 
 #include <FreqCount.h>
 #include <ADC.h>
