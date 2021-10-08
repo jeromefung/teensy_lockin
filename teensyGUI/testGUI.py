@@ -2,11 +2,8 @@ import tkinter as tk
 import subprocess
 import sys
 import serial
-
-'''
-Notes:
-need to create a widget then attach it, always use those two steps
-'''
+import pandas as pd
+import matplotlib.pyplot as plt
 
 class lockInDetection(tk.Frame):
     def __init__(self, parent):
@@ -39,82 +36,114 @@ class lockInDetection(tk.Frame):
         quitButton = tk.Button(self.parent, text="Quit", command=self.parent.destroy)
         quitButton.grid(row = 5, column=2, columnspan=2, sticky=tk.W+tk.E)
 
-        startButton = tk.Button(self.parent, text="Start", command=lambda : self.startArduino(frequencyEntry))
+        startButton = tk.Button(self.parent, text="Start", command=lambda : self.startTeensy(frequencyEntry))
         startButton.grid(row = 5, column=0, columnspan=2, sticky=tk.W+tk.E)
     
-    def startArduino(self, refFreq):
+    def startTeensy(self, refFreq):
         '''
         Uploads script to arduino and processes the data recieved
         Returns True if successful and false if not
         '''
-        if self.refSelect.get() == 0: #internal reference selected
-            try:
-                refFreq = int(refFreq.get())
-            except:
-                return False
-            #need to figure out how to send refFreq to arduino (maybe through serial?)
-            #need to update top of teensy sketches as well
-            filename = "C:\\Users\\chris\\OneDrive\\Documents\\College\\Spring 2021\\teensy\\teensy_lockin\\LockInInternalReference\\LockInInternalReference\\LockInInternalReference.ino"
-            self.sendToArduino(filename, refFreq)
-        elif self.refSelect.get() == 1: #external reference selected
-            filename = "C:\\Users\\chris\\OneDrive\\Documents\\College\\Spring 2021\\teensy\\teensy_lockin\\LockInExternalReference\\LockInExternalReference.ino"
-            self.sendToArduino(filename)
-        self.processData()
-        return True
+        try:
+            if self.refSelect.get() == 0: #internal reference selected
+                try:
+                    refFreq = int(refFreq.get())
+                except:
+                    return False
+                #need to figure out how to send refFreq to arduino (maybe through serial?)
+                #need to update top of teensy sketches as well
+                arduinoFilename = "C:\\Users\\chris\\OneDrive\\Documents\\College\\Spring 2021\\teensy\\teensy_lockin\\LockInInternalReference\\LockInInternalReference.ino"
+                self.sendToTeensy(arduinoFilename, refFreq)
+            elif self.refSelect.get() == 1: #external reference selected
+                arduinoFilename = "C:\\Users\\chris\\OneDrive\\Documents\\College\\Spring 2021\\teensy\\teensy_lockin\\LockInExternalReference\\LockInExternalReference.ino"
+                self.sendToTeensy(arduinoFilename)
+            self.processData()
+            return True
+        except:
+            print("Failed in startTeensy")
+            return False
 
-    def sendToArduino(self, filename, refFreq=-1):
+    def sendToTeensy(self, filename, refFreq=-1):
         '''
         Code is taken from https://forum.arduino.cc/t/upload-sketches-directly-from-geany/286641
         And modified by Chris Weil
+        Returns true if sucesesful, false otherwise
         '''
-        print("Uploading...")
-        arduinoProg = filename
+        try:
+            print("Uploading...")
+            arduinoProg = filename
 
-        projectFile = sys.argv[1]
+            projectFile = sys.argv[1]
 
-        codeFile = open(projectFile, 'r')
-        startLine = codeFile.readline()[3:].strip()
-        actionLine = codeFile.readline()[3:].strip()
-        boardLine = codeFile.readline()[3:].strip()
-        portLine = codeFile.readline()[3:].strip()
-        endLine = codeFile.readline()[3:].strip()
-        codeFile.close()
+            codeFile = open(projectFile, 'r')
+            startLine = codeFile.readline()[3:].strip()
+            actionLine = codeFile.readline()[3:].strip()
+            boardLine = codeFile.readline()[3:].strip()
+            portLine = codeFile.readline()[3:].strip()
+            endLine = codeFile.readline()[3:].strip()
+            codeFile.close()
 
-        #~ print projectFile
-        #~ print startLine
-        #~ print actionLine
-        #~ print boardLine
-        #~ print portLine
-        #~ print endLine
+            #~ print projectFile
+            #~ print startLine
+            #~ print actionLine
+            #~ print boardLine
+            #~ print portLine
+            #~ print endLine
 
-        if (startLine != "python-build-start" or endLine != "python-build-end"):
-            print("Sorry, can't process file")
-            sys.exit()
+            if (startLine != "python-build-start" or endLine != "python-build-end"):
+                print("Sorry, can't process file")
+                sys.exit()
 
-        arduinoCommand = arduinoProg + " --" + actionLine + " --board " + boardLine + " --port " + portLine + " " + projectFile
+            arduinoCommand = arduinoProg + " --" + actionLine + " --board " + boardLine + " --port " + portLine + " " + projectFile
 
-        print("\n\n -- Arduino Command --")
-        print(arduinoCommand)
+            print("\n\n -- Arduino Command --")
+            print(arduinoCommand)
 
-        print("-- Starting %s --\n" %(actionLine))
+            print("-- Starting %s --\n" %(actionLine))
 
-        presult = subprocess.call(arduinoCommand, shell=True)
+            presult = subprocess.call(arduinoCommand, shell=True)
 
-        if presult != 0:
-            print("\n Failed - result code = %s --" %(presult))
-        else:
-            print("\n-- Success --")
-        
-        if refFreq != -1:
-            ser.write(str(refFreq).encode()) #make sure that this is correct
+            if presult != 0:
+                print("\n Failed - result code = %s --" %(presult))
+            else:
+                print("\n-- Success --")
+            
+            if refFreq != -1:
+                ser.write(str(refFreq).encode('utf-8')) #need to update arduino file to read this from serial before doing anything else
+            return True
+        except:
+            print("Failed in sendToTeensy")
+            return False
 
     def processData(self):
-        data = ser.readline()
-        return None
+        '''
+        Processes the data, returns true if successful, false if otherwise
+        '''
+        try:
+            while ser.in_waiting != 0: #not sure if this will work
+                bytesToRead = ser.in_waiting
+                data = ser.read(bytesToRead)
+            rows = data.split("\n")
+            data2D = []
+            for i in range(len(rows)):
+                data2D.append(float(rows[i].split(",")))
+            dataDf = pd.DataFrame(data2D, columns = ["Signal", "I", "Q", "R", "Phi"])
+            plt.tick_params(axis = "x", which = "both", bottom = False, top = False)
+            plt.xticks(dataDf.index, " ")
+            fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
+            ax1.plot(dataDf.index, 2*dataDf["R"]*3.3/4096)
+            ax1.set_ylabel("Amplitude (V)", fontsize=20)
+            ax1.set_title("Lock-in Detection Results", fontsize = 25)
+            ax2.plot(dataDf.index, dataDf["Phi"])
+            ax2.set_ylabel("Phase (radians)")
+            return True
+        except:
+            print("Failed in processData")
+            return False
 
 def main():
     global ser
-    ser = serial.Serial('COM3', 38400)
+    ser = serial.Serial('COM3', 38400, timeout=None)
     root = tk.Tk()
     lockInDetection(root)
     root.mainloop()
