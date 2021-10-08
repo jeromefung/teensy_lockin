@@ -6,6 +6,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 class lockInDetection(tk.Frame):
+    '''
+    GUI for lock in detection with teensy microcontroller
+    Properties:
+    parent - the frame object for gui organization
+    refSelect - determines if using the internal or external reference frequency (0 for internal, 1 for external)
+    ser - the serial connection for communicating with the teensy (unsure if will need to reset it when wanting to run lock in again without closing gui)
+    '''
     def __init__(self, parent):
         '''Initialize Frame'''
         tk.Frame.__init__(self, parent)
@@ -16,6 +23,7 @@ class lockInDetection(tk.Frame):
         '''Initialize the frame parameters and create their widgets'''
         self.parent.title("Lock in Detector")
         self.refSelect = tk.IntVar()
+        self.ser = serial.Serial('COM3', 38400, timeout=None)
         self.createWidgets()
         #need to figure out window sizing and placement of widgets
 
@@ -33,11 +41,16 @@ class lockInDetection(tk.Frame):
         externalButton.deselect()
         externalButton.grid(row=2, columnspan=4, sticky=tk.W+tk.E)
 
-        quitButton = tk.Button(self.parent, text="Quit", command=self.parent.destroy)
+        quitButton = tk.Button(self.parent, text="Quit", command=lambda : self.quitGUI())
         quitButton.grid(row = 5, column=2, columnspan=2, sticky=tk.W+tk.E)
 
         startButton = tk.Button(self.parent, text="Start", command=lambda : self.startTeensy(frequencyEntry))
         startButton.grid(row = 5, column=0, columnspan=2, sticky=tk.W+tk.E)
+    
+    def quitGUI(self):
+        '''Closes serial port and GUI'''
+        self.ser.close()
+        self.parent.destroy
     
     def startTeensy(self, refFreq):
         '''
@@ -50,7 +63,6 @@ class lockInDetection(tk.Frame):
                     refFreq = int(refFreq.get())
                 except:
                     return False
-                #need to figure out how to send refFreq to arduino (maybe through serial?)
                 #need to update top of teensy sketches as well
                 arduinoFilename = "C:\\Users\\chris\\OneDrive\\Documents\\College\\Spring 2021\\teensy\\teensy_lockin\\LockInInternalReference\\LockInInternalReference.ino"
                 self.sendToTeensy(arduinoFilename, refFreq)
@@ -109,7 +121,7 @@ class lockInDetection(tk.Frame):
                 print("\n-- Success --")
             
             if refFreq != -1:
-                ser.write(str(refFreq).encode('utf-8')) #need to update arduino file to read this from serial before doing anything else
+                self.ser.write(str(refFreq).encode('utf-8')) #need to update arduino file to read this from serial before doing anything else
             return True
         except:
             print("Failed in sendToTeensy")
@@ -120,9 +132,9 @@ class lockInDetection(tk.Frame):
         Processes the data, returns true if successful, false if otherwise
         '''
         try:
-            while ser.in_waiting != 0: #not sure if this will work
-                bytesToRead = ser.in_waiting
-                data = ser.read(bytesToRead)
+            while self.ser.in_waiting != 0: #not sure if this will work
+                bytesToRead = self.ser.in_waiting
+                data = self.ser.read(bytesToRead)
             rows = data.split("\n")
             data2D = []
             for i in range(len(rows)):
@@ -142,8 +154,6 @@ class lockInDetection(tk.Frame):
             return False
 
 def main():
-    global ser
-    ser = serial.Serial('COM3', 38400, timeout=None)
     root = tk.Tk()
     lockInDetection(root)
     root.mainloop()
