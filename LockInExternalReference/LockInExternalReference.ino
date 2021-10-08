@@ -1,7 +1,7 @@
 // python-build-start
 // upload
 // arduino:teensyduino:3.5
-// /dev/ttyACM0
+// COM3
 // python-build-end
 
 #include <FreqCount.h>

@@ -1,6 +1,7 @@
 import tkinter as tk
 import subprocess
 import sys
+import serial
 
 '''
 Notes:
@@ -104,12 +105,16 @@ class lockInDetection(tk.Frame):
         else:
             print("\n-- Success --")
         
-        #maybe send reference frequency via serial here if it is not -1
+        if refFreq != -1:
+            ser.write(str(refFreq).encode()) #make sure that this is correct
 
     def processData(self):
-        return None #need to implement this
+        data = ser.readline()
+        return None
 
 def main():
+    global ser
+    ser = serial.Serial('COM3', 38400)
     root = tk.Tk()
     lockInDetection(root)
     root.mainloop()
