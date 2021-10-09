@@ -147,7 +147,7 @@ class lockInDetection(tk.Frame):
             ax1.set_ylabel("Amplitude (V)", fontsize=20)
             ax1.set_title("Lock-in Detection Results", fontsize = 25)
             ax2.plot(dataDf.index, dataDf["Phi"])
-            ax2.set_ylabel("Phase (radians)")
+            ax2.set_ylabel("Phase (radians)", fontsize=20)
             return True
         except:
             print("Failed in processData")
