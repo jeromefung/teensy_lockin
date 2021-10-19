@@ -22,34 +22,39 @@ class lockInDetection(tk.Frame):
         '''Initialize the frame parameters and create their widgets'''
         self.parent.title("Lock in Detector")
         self.refSelect = tk.IntVar()
-        self.ser = serial.Serial('COM6', 38400, timeout=None)
         self.createWidgets()
         #need to figure out window sizing and placement of widgets
 
     def createWidgets(self):
         '''Creates all the widgets needed for the GUI'''
         frequencyEntry = tk.Entry(self.parent)
-        frequencyEntry.grid(row=4, columnspan=4, sticky=tk.W+tk.E)
+        frequencyEntry.grid(row=5, columnspan=4, sticky=tk.W+tk.E)
         frequencyLabel = tk.Label(self.parent, text="Internal Reference Frequency:")
-        frequencyLabel.grid(row=3, columnspan=4, sticky=tk.W+tk.E)
+        frequencyLabel.grid(row=4, columnspan=4, sticky=tk.W+tk.E)
 
         internalButton = tk.Radiobutton(self.parent, text="Internal Reference", variable=self.refSelect, value=0)
         internalButton.deselect()
-        internalButton.grid(row=1, columnspan=4, sticky=tk.W+tk.E)
+        internalButton.grid(row=2, columnspan=4, sticky=tk.W+tk.E)
         externalButton = tk.Radiobutton(self.parent, text="External Reference", variable=self.refSelect, value=1)
         externalButton.deselect()
-        externalButton.grid(row=2, columnspan=4, sticky=tk.W+tk.E)
+        externalButton.grid(row=3, columnspan=4, sticky=tk.W+tk.E)
 
-        quitButton = tk.Button(self.parent, text="Quit", command=lambda : self.quitGUI())
-        quitButton.grid(row = 5, column=2, columnspan=2, sticky=tk.W+tk.E)
+        serStartButton = tk.Button(self.parent, text="Start Serial", command=lambda : self.startSerial())
+        serStartButton.grid(row = 1, column=0, columnspan=2, sticky=tk.W+tk.E)
+
+        serEndButton = tk.Button(self.parent, text="Close Serial", command=lambda : self.endSerial())
+        serEndButton.grid(row = 1, column=2, columnspan=2, sticky=tk.W+tk.E)
 
         startButton = tk.Button(self.parent, text="Start", command=lambda : self.startTeensy(frequencyEntry))
-        startButton.grid(row = 5, column=0, columnspan=2, sticky=tk.W+tk.E)
+        startButton.grid(row = 6, columnspan=4, sticky=tk.W+tk.E)
     
-    def quitGUI(self):
-        '''Closes serial port and GUI'''
+    def startSerial(self):
+        '''Opens serial port'''
+        self.ser = serial.Serial('COM6', 38400, timeout=None)
+    
+    def endSerial(self):
+        '''Closes serial port'''
         self.ser.close()
-        self.parent.destroy
     
     def startTeensy(self, refFreq):
         '''
