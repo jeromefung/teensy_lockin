@@ -1,6 +1,5 @@
 import tkinter as tk
 import subprocess
-import sys
 import serial
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -23,7 +22,7 @@ class lockInDetection(tk.Frame):
         '''Initialize the frame parameters and create their widgets'''
         self.parent.title("Lock in Detector")
         self.refSelect = tk.IntVar()
-        self.ser = serial.Serial('COM3', 38400, timeout=None)
+        self.ser = serial.Serial('COM6', 38400, timeout=None)
         self.createWidgets()
         #need to figure out window sizing and placement of widgets
 
@@ -57,72 +56,30 @@ class lockInDetection(tk.Frame):
         Uploads script to arduino and processes the data recieved
         Returns True if successful and false if not
         '''
-        try:
-            if self.refSelect.get() == 0: #internal reference selected
-                try:
-                    refFreq = int(refFreq.get())
-                except:
-                    return False
-                #need to update top of teensy sketches as well
-                arduinoFilename = "C:\\Users\\chris\\OneDrive\\Documents\\College\\Spring 2021\\teensy\\teensy_lockin\\LockInInternalReference\\LockInInternalReference.ino"
-                self.sendToTeensy(arduinoFilename, refFreq)
-            elif self.refSelect.get() == 1: #external reference selected
-                arduinoFilename = "C:\\Users\\chris\\OneDrive\\Documents\\College\\Spring 2021\\teensy\\teensy_lockin\\LockInExternalReference\\LockInExternalReference.ino"
-                self.sendToTeensy(arduinoFilename)
-            self.processData()
-            return True
-        except:
-            print("Failed in startTeensy")
-            return False
+        #try:
+        if self.refSelect.get() == 0: #internal reference selected
+            try:
+                refFreq = int(refFreq.get())
+            except:
+                return False
+            #need to update top of teensy sketches as well
+            arduinoFilename = "C:\\Users\\chris\\OneDrive\\Documents\\College\\Spring 2021\\teensy\\teensy_lockin\\LockInInternalReference\\LockInInternalReference.ino.TEENSY35.hex"
+            self.sendToTeensy(arduinoFilename, refFreq)
+        elif self.refSelect.get() == 1: #external reference selected
+            arduinoFilename = "C:\\Users\\chris\\OneDrive\\Documents\\College\\Spring 2021\\teensy\\teensy_lockin\\LockInExternalReference\\LockInExternalReference.ino.TEENSY35.hex"
+            self.sendToTeensy(arduinoFilename)
+        self.processData()
+        return True
+        #except:
+        #    print("Failed in startTeensy")
+        #    return False
 
     def sendToTeensy(self, filename, refFreq=-1):
-        '''
-        Code is taken from https://forum.arduino.cc/t/upload-sketches-directly-from-geany/286641
-        And modified by Chris Weil
-        Returns true if sucesesful, false otherwise
-        '''
         try:
-            print("Uploading...")
-            arduinoProg = filename
-
-            projectFile = sys.argv[1]
-
-            codeFile = open(projectFile, 'r')
-            startLine = codeFile.readline()[3:].strip()
-            actionLine = codeFile.readline()[3:].strip()
-            boardLine = codeFile.readline()[3:].strip()
-            portLine = codeFile.readline()[3:].strip()
-            endLine = codeFile.readline()[3:].strip()
-            codeFile.close()
-
-            #~ print projectFile
-            #~ print startLine
-            #~ print actionLine
-            #~ print boardLine
-            #~ print portLine
-            #~ print endLine
-
-            if (startLine != "python-build-start" or endLine != "python-build-end"):
-                print("Sorry, can't process file")
-                sys.exit()
-
-            arduinoCommand = arduinoProg + " --" + actionLine + " --board " + boardLine + " --port " + portLine + " " + projectFile
-
-            print("\n\n -- Arduino Command --")
-            print(arduinoCommand)
-
-            print("-- Starting %s --\n" %(actionLine))
-
-            presult = subprocess.call(arduinoCommand, shell=True)
-
-            if presult != 0:
-                print("\n Failed - result code = %s --" %(presult))
-            else:
-                print("\n-- Success --")
-            
-            if refFreq != -1:
-                self.ser.write(str(refFreq).encode('utf-8')) #need to update arduino file to read this from serial before doing anything else
+            command = "teensy_loader_cli --mcu=mk64fx512 -w " + filename
+            subprocess.run(command)
             return True
+        
         except:
             print("Failed in sendToTeensy")
             return False

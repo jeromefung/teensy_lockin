@@ -1,9 +1,3 @@
-// python-build-start
-// upload
-// arduino:teensyduino:3.5
-// COM3
-// python-build-end
-
 #include "SineLUT.h"
 #include <DMAChannel.h>
 #include <ADC.h>

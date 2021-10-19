@@ -52,9 +52,10 @@ void setup() {
   adc->adc0->setSamplingSpeed(ADC_SAMPLING_SPEED::LOW_SPEED); // change the sampling speed
  
   // Wait for button to be pressed
-  while (digitalRead(buttonPin) == 1) {
+  //while (digitalRead(buttonPin) == 1) {
     // do nothing
-  }
+  //}
+  delay(10000); //button is broken :(
 
   validDiff = adc->adc1->checkDifferentialPins(pinP, pinN);
   Serial.println(validDiff);
