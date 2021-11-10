@@ -1,12 +1,11 @@
 import tkinter as tk
-import subprocess
 import serial
 import pandas as pd
 import matplotlib.pyplot as plt
 
 class lockInDetection(tk.Frame):
     '''
-    GUI for lock in detection with teensy microcontroller
+    Frame object to be use in GUI for lock in detection with teensy microcontroller
     Properties:
     parent - the frame object for gui organization
     refSelect - determines if using the internal or external reference frequency (0 for internal, 1 for external)
@@ -51,6 +50,7 @@ class lockInDetection(tk.Frame):
     def startSerial(self):
         '''Opens serial port'''
         self.ser = serial.Serial('COM6', 38400, timeout=None)
+        print("Successful")
     
     def endSerial(self):
         '''Closes serial port'''
@@ -67,27 +67,16 @@ class lockInDetection(tk.Frame):
                 refFreq = int(refFreq.get())
             except:
                 return False
+            self.ser.write(1) #tell teensy using internal reference frequency
+            self.ser.write(refFreq) #tell teensy reference frequency to use
             #need to update top of teensy sketches as well
-            arduinoFilename = "C:\\Users\\chris\\OneDrive\\Documents\\College\\Spring 2021\\teensy\\teensy_lockin\\LockInInternalReference\\LockInInternalReference.ino.TEENSY35.hex"
-            self.sendToTeensy(arduinoFilename, refFreq)
         elif self.refSelect.get() == 1: #external reference selected
-            arduinoFilename = "C:\\Users\\chris\\OneDrive\\Documents\\College\\Spring 2021\\teensy\\teensy_lockin\\LockInExternalReference\\LockInExternalReference.ino.TEENSY35.hex"
-            self.sendToTeensy(arduinoFilename)
+            self.ser.write(0)
         self.processData()
         return True
         #except:
         #    print("Failed in startTeensy")
         #    return False
-
-    def sendToTeensy(self, filename, refFreq=-1):
-        try:
-            command = "teensy_loader_cli --mcu=mk64fx512 -w " + filename
-            subprocess.run(command)
-            return True
-        
-        except:
-            print("Failed in sendToTeensy")
-            return False
 
     def processData(self):
         '''
@@ -117,7 +106,10 @@ class lockInDetection(tk.Frame):
 
 def main():
     root = tk.Tk()
-    lockInDetection(root)
+    root.geometry("500x400")
+    frame = lockInDetection(root)
+    frame.grid()
+    #maybe change so that different types of elements are grouped in different frames instead of one large frame
     root.mainloop()
 
 if __name__ == '__main__':
