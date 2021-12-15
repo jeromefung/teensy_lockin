@@ -1,6 +1,5 @@
-#########
-# TODO: Make sample frequency a user controlled variable
-#There is still a reading issue with getting the data from the teensy
+#########################################################
+#TODO: Seeing weird measurements in plotting
 #########################################################
 
 import tkinter as tk
@@ -44,7 +43,7 @@ class lockInDetection(tk.Frame):
 
         sampleEntry = tk.Entry(self.parent)
         sampleEntry.grid(row=7, columnspan=4, sticky=tk.W+tk.E)
-        sampleLabel = tk.Label(self.parent, text="Sampling Rate:")
+        sampleLabel = tk.Label(self.parent, text="Sampling Rate (if unsure put 100000):") #maybe change to dropdown menu in the future
         sampleLabel.grid(row=6, columnspan=4, sticky=tk.W+tk.E)
 
         internalButton = tk.Radiobutton(
@@ -117,7 +116,6 @@ class lockInDetection(tk.Frame):
             
             #send sampling rate to teensy
             try:
-                sampRate = 100000 #just for testing rn
                 self.ser.write(str(sampRate).encode('utf-8'))
                 time.sleep(5)
             except:
@@ -139,7 +137,7 @@ class lockInDetection(tk.Frame):
                 data = self.ser.readlines() #NOTE: MAKE SURE THAT DO NOT NEED TO CONVERT FROM BYTES - maybe convert number to string in teensy before printing
             data2D = []
             for i in range(len(data)):
-                temp = str(data[i])[2:-1]
+                temp = str(data[i])
                 row = temp.split(", ")
                 for j in range(len(row)):
                     try:
