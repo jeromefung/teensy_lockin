@@ -20,6 +20,7 @@ const uint8_t pinN = A11;
 
 // **************************************************************
 // Global variables -- user set
+const unsigned long countPeriod_ms = 5000; // Count duration for reference frequency measurement
 const int measPeriod_us = 10; // 100 kHz sampling for signal acquisition
 const int nPts = 10000;
 const int cutoffFreq = 1.0;                   // for LP filtering, in Hz
@@ -31,7 +32,7 @@ unsigned long edgeCounts;
 int samplingRate = 1000000 / measPeriod_us; // in Hz
 const int analogOutPin = A21;
 long sinFreq;
-const int referenceFreq;
+int referenceFreq;
 
 short mySignal[nPts]; // the raw digitized signal of interest
 ADC *adc = new ADC(); // create ADC object
@@ -58,30 +59,6 @@ void setup()
     pinMode(pinP, INPUT);
     pinMode(pinN, INPUT);
 
-    while (Serial.available() == 0)
-    {
-        //do nothing
-    }
-    // Function for generating the internal frequency reference
-    if (Serial.read() == 1)
-    { //make sure that this is the right value to be using
-        sinFreq = (long) Serial.read();                         // Hz
-        referenceFreq = (double)sinFreq; // in Hz
-        generateReferenceWave();
-    }
-    else
-    {
-        // reading frequency source
-        FreqCount.begin(countPeriod_ms);
-        while (FreqCount.available() == false)
-        {
-            // Wait; do nothing
-        }
-        FreqCount.end();
-        edgeCounts = FreqCount.read();
-        referenceFreq = edgeCounts / (double)countPeriod_ms * 1000; // convert to get Hz
-    }
-
     // ADC setup
     adc->adc0->differentialMode(); // TODO: is this needed? not sure.
     adc->adc0->setResolution(13);  // A10, A11 connected to ADC1 only
@@ -93,7 +70,7 @@ void setup()
     delay(1000);
 
     // Fold out measurement into a function that can be called repeatedly
-    measureLockIn();
+    //measureLockIn();
 }
 
 void loop()
@@ -108,6 +85,50 @@ void loop()
 
     // Fold out measurement into a function that can be called repeatedly
     //measureLockIn();
+
+    Serial.flush(); //clear the input and output serial buffers
+    serialFlush();
+
+    while (Serial.available() == 0){}//do nothing while there is nothing to read from the input serial buffer
+    String data;
+    while (Serial.available()){
+        data = Serial.readString(); //read all of the data as a string from the serial buffer - this will be what kind of reference to use
+    }
+    if (data.toInt() == 1)    //if internal reference selected
+    { 
+      while (Serial.available() == 0){}//wait for internal reference frequency to be sent through the serial connection
+      while (Serial.available()){
+          data = Serial.readString(); //read the internal reference frequency
+      }
+        //need long for direct memory access look up table, need double for lock-in calculations
+        sinFreq = (long) data.toInt(); //convert to long data type, units here are Hz
+        referenceFreq = (double)sinFreq; // convert to double data type
+        generateReferenceWave(); //create the internal wave
+    }
+    else //if not internal frequency
+    {
+        // reading frequency source
+        FreqCount.begin(countPeriod_ms);
+        while (FreqCount.available() == false){}// Wait; do nothing if no count not done
+        FreqCount.end();
+        edgeCounts = FreqCount.read(); //get number of rising edges
+        referenceFreq = edgeCounts / (double)countPeriod_ms * 1000; // convert to get Hz
+    }
+    while (Serial.available()==0){}//wait for sampling rate to be sent to Teensy
+    while (Serial.available()){
+      data = Serial.readString(); //read sampling rate
+    }
+    samplingRate = data.toInt();//get sampling rate
+
+    delay(1000);
+
+    measureLockIn(); //function to do lock in calculations and send data back to computer
+}
+
+void serialFlush(){
+  while(Serial.available() > 0) {
+    char t = Serial.read();
+  }
 }
 
 void generateReferenceWave()
@@ -146,7 +167,7 @@ void generateReferenceWave()
     // Calculate period between outputs
     uint32_t mod = F_BUS / (sinFreq * LUT_SIZE);
     delay(500);
-    Serial.println(mod);
+    //Serial.println(mod);
 
     // See manual p. 935, sec 39.3.2 for PDB0_MOD register
     // Modulus of 1 actually means a period of 2 (counter resets back to 0 when it reaches PDB0_MOD)
@@ -230,8 +251,8 @@ void mixAndFilter()
         {
             sinTerm = sin(TWO_PI * referenceFreq * (n - coeffCtr) / samplingRate);
             cosTerm = cos(TWO_PI * referenceFreq * (n - coeffCtr) / samplingRate);
-            ynX = ynX + a[coeffCtr] * (double)mySignal[n - coeffCtr] * cosTerm + b[coeffCtr] * yregX[coeffCtr]; // switched from sine to cosine
-            ynY = ynY + a[coeffCtr] * (double)mySignal[n - coeffCtr] * sinTerm + b[coeffCtr] * yregY[coeffCtr]; // switched from cosine to sine
+            ynX = ynX + a[coeffCtr] * (double)mySignal[n - coeffCtr] * sinTerm + b[coeffCtr] * yregX[coeffCtr];
+            ynY = ynY + a[coeffCtr] * (double)mySignal[n - coeffCtr] * cosTerm + b[coeffCtr] * yregY[coeffCtr];
         }
         // Update registers, going backwards
         for (int coeffCtr = numCoeffs - 1; coeffCtr > 0; coeffCtr--)
@@ -250,14 +271,14 @@ void mixAndFilter()
         // Calculate final values and print
         R = sqrt(ynX * ynX + ynY * ynY);
         phi = atan2(ynY, ynX);
-        Serial.print(mySignal[n]);
+        Serial.print(String(mySignal[n]));//print data to serial
         Serial.print(", ");
-        Serial.print(ynX);
+        Serial.print(String(ynX));//in phase
         Serial.print(", ");
-        Serial.print(ynY);
+        Serial.print(String(ynY));//quadrature
         Serial.print(", ");
-        Serial.print(R); // amplitude - will be 0.5 as much as input amplitude
+        Serial.print(String(R)); // amplitude - will be 0.5 as much as input amplitude
         Serial.print(", ");
-        Serial.println(phi); // phase
+        Serial.println(String(phi)); // phase
     }
 }

@@ -68,6 +68,12 @@ void setup() {
   adc->adc0->setConversionSpeed(ADC_CONVERSION_SPEED::HIGH_SPEED) ; // changes ADC clock
   adc->adc0->setSamplingSpeed(ADC_SAMPLING_SPEED::LOW_SPEED); // change the sampling speed
   validDiff = adc->adc1->checkDifferentialPins(pinP, pinN);
+
+  delay(10000);
+  Serial.println("Button Pressed");
+
+  // Fold out measurement into a function that can be called repeatedly
+  measureLockIn();
 }
 
 void loop() {
@@ -76,11 +82,11 @@ void loop() {
   //while (digitalRead(buttonPin) == 1) {
     // do nothing
   //}
-  delay(10000);
-  Serial.println("Button Pressed");
+  //delay(10000);
+  //Serial.println("Button Pressed");
 
   // Fold out measurement into a function that can be called repeatedly
-  measureLockIn();
+  //measureLockIn();
 }
 
 void generateReferenceWave() {
