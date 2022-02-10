@@ -43,7 +43,7 @@ class lockInDetection(tk.Frame):
 
         sampleEntry = tk.Entry(self.parent)
         sampleEntry.grid(row=7, columnspan=4, sticky=tk.W+tk.E)
-        sampleLabel = tk.Label(self.parent, text="Sampling Rate (if unsure put 100000):") #maybe change to dropdown menu in the future
+        sampleLabel = tk.Label(self.parent, text="Sampling Rate (if unsure leave empty):") #maybe change to dropdown menu in the future
         sampleLabel.grid(row=6, columnspan=4, sticky=tk.W+tk.E)
 
         internalButton = tk.Radiobutton(
@@ -73,7 +73,7 @@ class lockInDetection(tk.Frame):
 
     def startSerial(self):
         '''Opens serial port'''
-        self.ser = serial.Serial('COM6', 38400, timeout=5, write_timeout=10)
+        self.ser = serial.Serial('COM6', 38400, timeout=5, write_timeout=10) #should be able to pick serial port
         print("Successful")
 
     def endSerial(self):
@@ -91,35 +91,28 @@ class lockInDetection(tk.Frame):
             if self.refSelect.get() == 0:  # internal reference selected
                 try:
                     refFreq = int(refFreq.get())
-                    sampRate = int(sampRate.get())
-                    print(refFreq)
                 except:
                     return False
-                # I think these are currently timing out??? - need to look up why
                 try:
-                    mode = 1
-                    # tell teensy using internal reference frequency, unsure if \n will be written too or not
-                    self.ser.write(str(mode).encode('utf-8'))
-                    time.sleep(5)
+                    sampRate = int(sampRate.get()) #get sample rate
                 except:
-                    print("writing timed out")
+                    sampRate = 100000
+                #make instruction string
+                stringToSend = "0:" + str(refFreq) + ":" + str(sampRate) + "F"
+            else:
                 try:
-                    self.ser.write(str(refFreq).encode('utf-8'))
-                    time.sleep(5)
+                    sampRate = int(sampRate.get()) #get sample rate
                 except:
-                    print("Writing timed out")
-                # need to update top of teensy sketches as well
-            elif self.refSelect.get() == 1:  # external reference selected
-                mode = 0
-                self.ser.write(str(mode).encode('utf-8'))
-                time.sleep(5)
+                    sampRate = 100000
+                #make instruction string
+                stringToSend = "1:" + str(sampRate) + "F"
             
-            #send sampling rate to teensy
+            #send data
             try:
-                self.ser.write(str(sampRate).encode('utf-8'))
-                time.sleep(5)
+                self.ser.write(str(stringToSend).encode('utf-8'))
+                time.sleep(10)
             except:
-                print("Writing timed out")
+                print("writing timed out")
             self.processData()
             return True
         except:

@@ -41,6 +41,9 @@ bool validDiff;
 int measCtr = 0;
 int refVal, lastVal;
 
+const int numInstructChars = 32; //number of characters in each instruction sent to arduino
+char instruct[numInstructChars]; //array to store instruction in
+
 IntervalTimer myTimer;
 
 DMAChannel dma1(true);
@@ -75,20 +78,42 @@ void setup()
 
 void loop()
 {
-    // put your main code here, to run repeatedly:
-    // Wait for button to be pressed
-    //while (digitalRead(buttonPin) == 1) {
-    // do nothing
-    //}
-    //delay(1000);
-    //Serial.println("Button Pressed");
-
-    // Fold out measurement into a function that can be called repeatedly
-    //measureLockIn();
-
     Serial.flush(); //clear the input and output serial buffers
     serialFlush();
 
+    
+    while(!Serial.available()){} //wait for instruction to be sent
+  char receivedChar;
+  int index = 0;
+  while(Serial.available() && receivedChar != "F"){
+    receivedChar = Serial.read();
+    instruct[index] = receivedChar;
+    index++;
+  }
+
+  //interpret the instruction
+  char* com = strtok(instruct, ":");
+  if (com == "0"){ //if internal reference
+    com = strtok(NULL, ":");
+    sinFreq = (long) atoi(com);
+    com = strtok(NULL, "F");
+    samplingRate = atoi(com);
+    referenceFreq = (double) sinFreq;
+    generateReferenceWave();
+  }
+  else{
+    com = strtok(NULL, "F");
+    samplingRate = atoi(com);
+  }
+    
+    
+    
+    
+    
+    
+    
+    /* //commenting out old serial communication code
+    
     while (Serial.available() == 0){}//do nothing while there is nothing to read from the input serial buffer
     String data;
     while (Serial.available()){
@@ -119,6 +144,14 @@ void loop()
       data = Serial.readString(); //read sampling rate
     }
     samplingRate = data.toInt();//get sampling rate
+
+  */
+
+
+
+
+
+    
 
     delay(1000);
 
