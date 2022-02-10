@@ -1,6 +1,4 @@
-#########################################################
-#TODO: Seeing weird measurements in plotting
-#########################################################
+#TODO: Check plotting method to ensure it works properly
 
 import tkinter as tk
 from tkinter import filedialog
@@ -8,7 +6,6 @@ import time
 import serial
 import pandas as pd
 import matplotlib.pyplot as plt
-
 
 class lockInDetection(tk.Frame):
     '''
@@ -36,44 +33,55 @@ class lockInDetection(tk.Frame):
     def createWidgets(self):
         '''Creates all the widgets needed for the GUI'''
         frequencyEntry = tk.Entry(self.parent)
-        frequencyEntry.grid(row=5, columnspan=4, sticky=tk.W+tk.E)
+        frequencyEntry.grid(row=5, columnspan=6, sticky=tk.W+tk.E)
         frequencyLabel = tk.Label(
             self.parent, text="Internal Reference Frequency:")
-        frequencyLabel.grid(row=4, columnspan=4, sticky=tk.W+tk.E)
+        frequencyLabel.grid(row=4, columnspan=6, sticky=tk.W+tk.E)
 
         sampleEntry = tk.Entry(self.parent)
-        sampleEntry.grid(row=7, columnspan=4, sticky=tk.W+tk.E)
+        sampleEntry.grid(row=7, columnspan=6, sticky=tk.W+tk.E)
         sampleLabel = tk.Label(self.parent, text="Sampling Rate (if unsure leave empty):") #maybe change to dropdown menu in the future
-        sampleLabel.grid(row=6, columnspan=4, sticky=tk.W+tk.E)
+        sampleLabel.grid(row=6, columnspan=6, sticky=tk.W+tk.E)
 
         internalButton = tk.Radiobutton(
             self.parent, text="Internal Reference", variable=self.refSelect, value=0)
         internalButton.deselect()
-        internalButton.grid(row=2, columnspan=4, sticky=tk.W+tk.E)
+        internalButton.grid(row=2, columnspan=6, sticky=tk.W+tk.E)
         externalButton = tk.Radiobutton(
             self.parent, text="External Reference", variable=self.refSelect, value=1)
         externalButton.deselect()
-        externalButton.grid(row=3, columnspan=4, sticky=tk.W+tk.E)
+        externalButton.grid(row=3, columnspan=6, sticky=tk.W+tk.E)
+
+        serPort = tk.Entry(self.parent)
+        serPort.grid(row=1, column=1, sticky=tk.W+tk.E)
+
+        serPortLabel = tk.Label(self.parent, text="Serial Port Number (1-256):")
+        serPortLabel.grid(row=1, column=0, columnspan=1, sticky=tk.W+tk.E)
 
         serStartButton = tk.Button(
-            self.parent, text="Start Serial", command=lambda: self.startSerial())
-        serStartButton.grid(row=1, column=0, columnspan=2, sticky=tk.W+tk.E)
+            self.parent, text="Start Serial", command=lambda: self.startSerial(serPort))
+        serStartButton.grid(row=1, column=2, sticky=tk.W+tk.E)
 
         serEndButton = tk.Button(
             self.parent, text="Close Serial", command=lambda: self.endSerial())
-        serEndButton.grid(row=1, column=2, columnspan=2, sticky=tk.W+tk.E)
+        serEndButton.grid(row=1, column=4, sticky=tk.W+tk.E)
 
         startButton = tk.Button(self.parent, text="Start",
                                 command=lambda: self.startTeensy(frequencyEntry, sampleEntry))
-        startButton.grid(row=8, columnspan=4, sticky=tk.W+tk.E)
+        startButton.grid(row=8, columnspan=6, sticky=tk.W+tk.E)
 
         saveButton = tk.Button(self.parent, text="Save Data",
                                 command=lambda: self.saveData())
-        saveButton.grid(row=9, columnspan=4, sticky=tk.W+tk.E)
+        saveButton.grid(row=9, columnspan=6, sticky=tk.W+tk.E)
 
-    def startSerial(self):
+    def startSerial(self, serPort):
         '''Opens serial port'''
-        self.ser = serial.Serial('COM6', 38400, timeout=5, write_timeout=10) #should be able to pick serial port
+        try:
+            port = serPort.get()
+        except:
+            print("Serial Port Not Specified")
+        port = "COM" + port
+        self.ser = serial.Serial(port, 38400, timeout=5, write_timeout=10)
         print("Successful")
 
     def endSerial(self):
@@ -174,10 +182,8 @@ class lockInDetection(tk.Frame):
 
 def main():
     root = tk.Tk()
-    #root.geometry("500x400")
     frame = lockInDetection(root)
     frame.grid()
-    # maybe change so that different types of elements are grouped in different frames instead of one large frame
     root.mainloop()
 
 
