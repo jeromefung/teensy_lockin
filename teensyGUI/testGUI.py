@@ -1,5 +1,3 @@
-#TODO: Check plotting method to ensure it works properly
-
 import tkinter as tk
 from tkinter import filedialog
 import time
