@@ -135,22 +135,20 @@ class lockInDetection(tk.Frame):
             while self.ser.in_waiting == 0: #while nothing in serial do nothing
                 pass
             while self.ser.in_waiting != 0:  #when things in serial read them all
-                data = self.ser.readlines() #NOTE: MAKE SURE THAT DO NOT NEED TO CONVERT FROM BYTES - maybe convert number to string in teensy before printing
+                data = self.ser.readlines()
+            data = data[:-1] #cutout last data point since is not actual data
             data2D = []
-            for i in range(len(data)):
-                temp = str(data[i])
-                row = temp.split(", ")
-                for j in range(len(row)):
-                    try:
-                        row[j] = float(row[j]) #convert each value to a float
-                    except:
-                        row[j] = 0.0 #just do this for now, come up with better fix for ovf and inf later
-                data2D.append(row) #add the data to rows of 2D list
-            #print(data2D)
-            dataDf = pd.DataFrame(data2D) #convert to pandas dataframe
-            dataDf = dataDf.loc[:, [0,1,2,3,4]] #get only the columns we care about
-            #print(dataDf.head())
-            dataDf.columns = ["Signal", "I", "Q", "R", "Phi"] #set columns labels
+            for i in range(len(data)): #convert from bytes to floats for each data point
+                temp = data[i]
+                temp = str(temp)
+                temp = temp.split(', ')
+                temp[0] = temp[0][2:]
+                temp[-1] = temp[-1][:-5]
+                for j in range(len(temp)):
+                    temp[j] = float(temp[j])
+                data2D.append(temp)
+            dataDf = pd.DataFrame(data2D) #put data into dataframe
+            dataDf.columns = ["Signal", "I", "Q", "R", "Phi"] #set dataframe column names
             #plt.tick_params(axis= "x", which = "both", bottom = False, top = False)
             #plt.xticks(dataDf.index, " ")
             fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True) #plot the data
@@ -159,7 +157,7 @@ class lockInDetection(tk.Frame):
             ax1.set_title("Lock-in Detection Results", fontsize= 25)
             ax2.plot(dataDf.index, dataDf["Phi"])
             ax2.set_ylabel("Phase (radians)", fontsize=20)
-            plt.show()
+            plt.show() #fix to allow to save data without having to close plot
             print(dataDf.head())
             self.DataDf = dataDf
             return True
