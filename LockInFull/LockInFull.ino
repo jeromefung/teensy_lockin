@@ -257,6 +257,5 @@ void mixAndFilter()
         Serial.print(", ");
         Serial.print(phi); // phase
         Serial.print("E");
-        delay(2);
     }
 }

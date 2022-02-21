@@ -1,6 +1,5 @@
 import tkinter as tk
 from tkinter import filedialog
-import time
 import serial
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -81,6 +80,7 @@ class lockInDetection(tk.Frame):
         port = "COM" + port
         try:
             self.ser = serial.Serial(port, 38400, timeout=None, write_timeout=10)
+            self.ser.set_buffer_size(rx_size= 100000, tx_size=4096)
             print("Successful")
         except:
             print("Could not connect to serial port")
@@ -122,7 +122,6 @@ class lockInDetection(tk.Frame):
             #send data
             try:
                 self.ser.write(str(stringToSend).encode('utf-8'))
-                time.sleep(1)
             except:
                 print("writing timed out")
             self.processData()
