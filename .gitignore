@@ -3,6 +3,9 @@
 *.m~
 *.asv
 *.pyc
+teensyGUI/debuggingDataTest.txt
+teensyGUI/interprettingTeensyDataTest.py
+/SerialTesting
 
 octave-workspace
 
