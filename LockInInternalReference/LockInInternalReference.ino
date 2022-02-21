@@ -70,7 +70,6 @@ void setup() {
   validDiff = adc->adc1->checkDifferentialPins(pinP, pinN);
 
   delay(10000);
-  Serial.println("Button Pressed");
 
   // Fold out measurement into a function that can be called repeatedly
   measureLockIn();
@@ -123,7 +122,7 @@ void generateReferenceWave() {
   // Calculate period between outputs
   uint32_t mod = F_BUS / (sinFreq * LUT_SIZE) ;
   delay(500);
-  Serial.println(mod);
+  //Serial.println(mod);
 
   // See manual p. 935, sec 39.3.2 for PDB0_MOD register
   // Modulus of 1 actually means a period of 2 (counter resets back to 0 when it reaches PDB0_MOD)
@@ -161,6 +160,8 @@ void measureLockIn() {
 
   // Mix and filter the signal, a point at a time
   mixAndFilter();
+
+  Serial.print(String("end"));
   
 }
 
@@ -199,7 +200,7 @@ void mixAndFilter() {
     ynY = 0;
     for (int coeffCtr = 0; coeffCtr < numCoeffs; coeffCtr++){
       sinTerm = sin(TWO_PI * referenceFreq * (n - coeffCtr) / samplingRate);
-      cosTerm = cos(TWO_PI * referenceFreq * (n - coeffCtr) / samplingRate);
+      cosTerm = cos(TWO_PI * referenceFreq * (n - coeffCtr) / samplingRate);                                // I think these should be switched back - recheck math
       ynX = ynX + a[coeffCtr] * (double) mySignal[n - coeffCtr] * cosTerm  + b[coeffCtr] * yregX[coeffCtr]; // switched from sine to cosine
       ynY = ynY + a[coeffCtr] * (double) mySignal[n - coeffCtr] * sinTerm  + b[coeffCtr] * yregY[coeffCtr]; // switched from cosine to sine
     }
@@ -226,6 +227,7 @@ void mixAndFilter() {
     Serial.print(R); // amplitude - will be 0.5 as much as input amplitude
     Serial.print(", ");
     Serial.println(phi); // phase
+    delay(1);
   }
   
 }

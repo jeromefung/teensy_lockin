@@ -9,9 +9,6 @@
 
 // **************************************************************
 // Pin configurations
-// NO pushbutton to start operation. Connect 1 terminal to 23, the other to ground.
-const uint8_t buttonPin = 23;
-
 // Connect signal to be measured to analog pins A10/A11 (differential channel 3)
 const uint8_t pinP = A10;
 const uint8_t pinN = A11;
@@ -21,7 +18,7 @@ const uint8_t pinN = A11;
 // **************************************************************
 // Global variables -- user set
 const unsigned long countPeriod_ms = 5000; // Count duration for reference frequency measurement
-const int measPeriod_us = 10; // 100 kHz sampling for signal acquisition
+const int measPeriod_us = 100; // 10 kHz sampling for signal acquisition
 const int nPts = 10000;
 const int cutoffFreq = 1.0;                   // for LP filtering, in Hz
 // **************************************************************
@@ -58,7 +55,6 @@ void setup()
 {
     // put your setup code here, to run once:
     Serial.begin(38400);
-    pinMode(buttonPin, INPUT_PULLUP);
     pinMode(pinP, INPUT);
     pinMode(pinN, INPUT);
 
@@ -69,20 +65,15 @@ void setup()
     adc->adc0->setConversionSpeed(ADC_CONVERSION_SPEED::HIGH_SPEED); // changes ADC clock
     adc->adc0->setSamplingSpeed(ADC_SAMPLING_SPEED::LOW_SPEED);      // change the sampling speed
     validDiff = adc->adc1->checkDifferentialPins(pinP, pinN);
-
     delay(1000);
-
-    // Fold out measurement into a function that can be called repeatedly
-    //measureLockIn();
 }
 
 void loop()
 {
-    Serial.flush(); //clear the input and output serial buffers
-    serialFlush();
+  Serial.flush(); //clear the input and output serial buffers
+  serialFlush();
 
-    
-    while(!Serial.available()){} //wait for instruction to be sent
+  while(!Serial.available()){} //wait for instruction to be sent
   char receivedChar;
   int index = 0;
   while(Serial.available() && receivedChar != "F"){
@@ -105,57 +96,9 @@ void loop()
     com = strtok(NULL, "F");
     samplingRate = atoi(com);
   }
-    
-    
-    
-    
-    
-    
-    
-    /* //commenting out old serial communication code
-    
-    while (Serial.available() == 0){}//do nothing while there is nothing to read from the input serial buffer
-    String data;
-    while (Serial.available()){
-        data = Serial.readString(); //read all of the data as a string from the serial buffer - this will be what kind of reference to use
-    }
-    if (data.toInt() == 1)    //if internal reference selected
-    { 
-      while (Serial.available() == 0){}//wait for internal reference frequency to be sent through the serial connection
-      while (Serial.available()){
-          data = Serial.readString(); //read the internal reference frequency
-      }
-        //need long for direct memory access look up table, need double for lock-in calculations
-        sinFreq = (long) data.toInt(); //convert to long data type, units here are Hz
-        referenceFreq = (double)sinFreq; // convert to double data type
-        generateReferenceWave(); //create the internal wave
-    }
-    else //if not internal frequency
-    {
-        // reading frequency source
-        FreqCount.begin(countPeriod_ms);
-        while (FreqCount.available() == false){}// Wait; do nothing if no count not done
-        FreqCount.end();
-        edgeCounts = FreqCount.read(); //get number of rising edges
-        referenceFreq = edgeCounts / (double)countPeriod_ms * 1000; // convert to get Hz
-    }
-    while (Serial.available()==0){}//wait for sampling rate to be sent to Teensy
-    while (Serial.available()){
-      data = Serial.readString(); //read sampling rate
-    }
-    samplingRate = data.toInt();//get sampling rate
+  delay(1000);
 
-  */
-
-
-
-
-
-    
-
-    delay(1000);
-
-    measureLockIn(); //function to do lock in calculations and send data back to computer
+  measureLockIn(); //function to do lock in calculations and send data back to computer
 }
 
 void serialFlush(){
@@ -304,14 +247,14 @@ void mixAndFilter()
         // Calculate final values and print
         R = sqrt(ynX * ynX + ynY * ynY);
         phi = atan2(ynY, ynX);
-        Serial.print(String(mySignal[n]));//print data to serial
+        Serial.print(mySignal[n]);//print data to serial
         Serial.print(", ");
-        Serial.print(String(ynX));//in phase
+        Serial.print(ynX);//in phase
         Serial.print(", ");
-        Serial.print(String(ynY));//quadrature
+        Serial.print(ynY);//quadrature
         Serial.print(", ");
-        Serial.print(String(R)); // amplitude - will be 0.5 as much as input amplitude
+        Serial.print(R); // amplitude - will be 0.5 as much as input amplitude
         Serial.print(", ");
-        Serial.println(String(phi)); // phase
+        Serial.println(phi); // phase
     }
 }
