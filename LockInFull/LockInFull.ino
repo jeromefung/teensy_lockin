@@ -255,6 +255,8 @@ void mixAndFilter()
         Serial.print(", ");
         Serial.print(R); // amplitude - will be 0.5 as much as input amplitude
         Serial.print(", ");
-        Serial.println(phi); // phase
+        Serial.print(phi); // phase
+        Serial.print("E");
+        delay(2);
     }
 }

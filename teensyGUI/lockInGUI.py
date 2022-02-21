@@ -79,12 +79,18 @@ class lockInDetection(tk.Frame):
         except:
             print("Serial Port Not Specified")
         port = "COM" + port
-        self.ser = serial.Serial(port, 38400, timeout=5, write_timeout=10)
-        print("Successful")
+        try:
+            self.ser = serial.Serial(port, 38400, timeout=None, write_timeout=10)
+            print("Successful")
+        except:
+            print("Could not connect to serial port")
 
     def endSerial(self):
         '''Closes serial port'''
-        self.ser.close()
+        try:
+            self.ser.close()
+        except:
+            print("No serial port open")
 
     def startTeensy(self, refFreq, sampRate):
         '''
@@ -102,7 +108,7 @@ class lockInDetection(tk.Frame):
                 try:
                     sampRate = int(sampRate.get()) #get sample rate
                 except:
-                    sampRate = 100000
+                    sampRate = 10000
                 #make instruction string
                 stringToSend = "0:" + str(refFreq) + ":" + str(sampRate) + "F"
             else:
@@ -116,7 +122,7 @@ class lockInDetection(tk.Frame):
             #send data
             try:
                 self.ser.write(str(stringToSend).encode('utf-8'))
-                time.sleep(10)
+                time.sleep(1)
             except:
                 print("writing timed out")
             self.processData()
@@ -130,21 +136,31 @@ class lockInDetection(tk.Frame):
         Processes the data, returns true if successful, false if otherwise
         '''
         try:
+            data = []
             while self.ser.in_waiting == 0: #while nothing in serial do nothing
                 pass
-            while self.ser.in_waiting != 0:  #when things in serial read them all
-                data = self.ser.readlines()
+            d = ''
+            while self.ser.in_waiting != 0:
+                temp = self.ser.read()
+                temp = str(temp)[2:-1]
+                if (temp != 'E'):
+                    d = d + temp
+                else:
+                    data.append(d)
+                    d = ''         
             data = data[:-1] #cutout last data point since is not actual data
+            print(data)
+            print(len(data))
             data2D = []
             for i in range(len(data)): #convert from bytes to floats for each data point
-                temp = data[i]
-                temp = str(temp)
-                temp = temp.split(', ')
-                temp[0] = temp[0][2:]
-                temp[-1] = temp[-1][:-5]
-                for j in range(len(temp)):
-                    temp[j] = float(temp[j])
-                data2D.append(temp)
+                try:
+                    temp = data[i]
+                    temp = temp.split(', ')
+                    for j in range(len(temp)):
+                        temp[j] = float(temp[j])
+                    data2D.append(temp)
+                except:
+                    pass
             dataDf = pd.DataFrame(data2D) #put data into dataframe
             dataDf.columns = ["Signal", "I", "Q", "R", "Phi"] #set dataframe column names
             #plt.tick_params(axis= "x", which = "both", bottom = False, top = False)
@@ -159,9 +175,11 @@ class lockInDetection(tk.Frame):
             print(dataDf.head())
             self.DataDf = dataDf
             return True
-        except:
+        except Exception as e:
             print("Failed in processData")
+            print(e)
             return False
+
     
     def saveData(self):
         files = [('CSV (Comma Delimited)', '*.csv'),

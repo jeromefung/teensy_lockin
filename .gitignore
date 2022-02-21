@@ -5,6 +5,7 @@
 *.pyc
 teensyGUI/debuggingDataTest.txt
 teensyGUI/interprettingTeensyDataTest.py
+teensyGUI/SerialTest.java
 /SerialTesting
 
 octave-workspace
