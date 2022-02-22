@@ -136,20 +136,21 @@ class lockInDetection(tk.Frame):
         '''
         try:
             data = []
+            count = 0
             while self.ser.in_waiting == 0: #while nothing in serial do nothing
                 pass
             d = ''
-            while self.ser.in_waiting != 0:
+            while count < 9500: #ok with loosing 500 data points for now
                 temp = self.ser.read()
                 temp = str(temp)[2:-1]
                 if (temp != 'E'):
                     d = d + temp
                 else:
                     data.append(d)
-                    d = ''         
+                    d = ''
+                    count += 1      
             data = data[:-1] #cutout last data point since is not actual data
-            print(data)
-            print(len(data))
+            print("lines read:", len(data))
             data2D = []
             for i in range(len(data)): #convert from bytes to floats for each data point
                 try:
@@ -202,3 +203,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+#look into https://www.codeguru.com/network/serial-communication-in-windows/
