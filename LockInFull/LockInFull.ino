@@ -70,8 +70,8 @@ void setup()
 
 void loop()
 {
-  Serial.flush(); //clear the input and output serial buffers
-  serialFlush();
+  //Serial.flush(); //clear the input and output serial buffers - do not do this because prints faster than reads
+  //serialFlush();
 
   while(!Serial.available()){} //wait for instruction to be sent
   char receivedChar;
@@ -257,5 +257,6 @@ void mixAndFilter()
         Serial.print(", ");
         Serial.print(phi); // phase
         Serial.print("E");
+        delay(2);
     }
 }
