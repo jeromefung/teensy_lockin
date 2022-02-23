@@ -203,5 +203,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-#look into https://www.codeguru.com/network/serial-communication-in-windows/
