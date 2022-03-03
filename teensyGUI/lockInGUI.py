@@ -3,6 +3,7 @@ from tkinter import filedialog
 import serial
 import pandas as pd
 import matplotlib.pyplot as plt
+import sys
 
 class lockInDetection(tk.Frame):
     '''
@@ -140,7 +141,7 @@ class lockInDetection(tk.Frame):
             while self.ser.in_waiting == 0: #while nothing in serial do nothing
                 pass
             d = ''
-            while count < 9500: #ok with loosing 500 data points for now
+            while count < 9900: #expecting 10000 lines of data right now
                 temp = self.ser.read()
                 temp = str(temp)[2:-1]
                 if (temp != 'E'):
@@ -161,7 +162,7 @@ class lockInDetection(tk.Frame):
                     data2D.append(temp)
                 except:
                     pass
-            dataDf = pd.DataFrame(data2D) #put data into dataframe
+            dataDf = pd.DataFrame(data2D[2:]) #put data into dataframe - get rid of first line since left over from previous run
             dataDf.columns = ["Signal", "I", "Q", "R", "Phi"] #set dataframe column names
             #plt.tick_params(axis= "x", which = "both", bottom = False, top = False)
             #plt.xticks(dataDf.index, " ")
@@ -177,7 +178,9 @@ class lockInDetection(tk.Frame):
             return True
         except Exception as e:
             print("Failed in processData")
-            print(e)
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            print(e, exc_type, exc_tb.tb_lineno)
+            print(dataDf.head())
             return False
 
     

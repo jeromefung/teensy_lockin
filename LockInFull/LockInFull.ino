@@ -70,9 +70,6 @@ void setup()
 
 void loop()
 {
-  //Serial.flush(); //clear the input and output serial buffers - do not do this because prints faster than reads
-  //serialFlush();
-
   while(!Serial.available()){} //wait for instruction to be sent
   char receivedChar;
   int index = 0;
@@ -97,14 +94,8 @@ void loop()
     samplingRate = atoi(com);
   }
   delay(1000);
-
+  Serial.flush(); //clear output buffer after new instruction has been recieved
   measureLockIn(); //function to do lock in calculations and send data back to computer
-}
-
-void serialFlush(){
-  while(Serial.available() > 0) {
-    char t = Serial.read();
-  }
 }
 
 void generateReferenceWave()
@@ -219,13 +210,21 @@ void mixAndFilter()
     double yregY[numCoeffs];
     double ynX, ynY, sinTerm, cosTerm, R, phi;
 
-    for (int n = 0; n < nPts; n++)
-    {
-        ynX = 0;
-        ynY = 0;
+    //adding an initial value since (n-1) terms can be weird when n=0, signal weird at first too, may be worth starting at like n = 100
+    ynY = a[0] * (double) mySignal[0];
+    for (int i=0; i<numCoeffs; i++){
+      yregX[i] = 0;
+      yregY[i] = ynY;
+    }
+
+    for (int n = 1; n < nPts; n++)
+    {       
+        ynX = 0; // in phase
+        ynY = 0;// out of phase
         for (int coeffCtr = 0; coeffCtr < numCoeffs; coeffCtr++)
         {
-            sinTerm = sin(TWO_PI * referenceFreq * (n - coeffCtr) / samplingRate);
+          //why dividing by sampling rate?
+            sinTerm = sin(TWO_PI * referenceFreq * (n - coeffCtr) / samplingRate); //CHECK THIS - make sure that something are not being counted twice, but the sines and cosines are correct
             cosTerm = cos(TWO_PI * referenceFreq * (n - coeffCtr) / samplingRate);
             ynX = ynX + a[coeffCtr] * (double)mySignal[n - coeffCtr] * sinTerm + b[coeffCtr] * yregX[coeffCtr];
             ynY = ynY + a[coeffCtr] * (double)mySignal[n - coeffCtr] * cosTerm + b[coeffCtr] * yregY[coeffCtr];
@@ -233,7 +232,7 @@ void mixAndFilter()
         // Update registers, going backwards
         for (int coeffCtr = numCoeffs - 1; coeffCtr > 0; coeffCtr--)
         {
-            if (coeffCtr == 1)
+            if (coeffCtr == 1) //I think this is wrong - maybe overwriting the value first before moving things down the register
             {
                 yregX[coeffCtr] = ynX;
                 yregY[coeffCtr] = ynY;
