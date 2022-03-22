@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "hidsdi.h": "c"
+        "hidsdi.h": "c",
+        "cmath": "cpp"
     }
 }

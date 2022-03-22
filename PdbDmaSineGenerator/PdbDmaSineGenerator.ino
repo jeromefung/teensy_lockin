@@ -18,7 +18,7 @@
 #define PDB_CONFIG (PDB_SC_TRGSEL(15) | PDB_SC_PDBEN | PDB_SC_CONT | PDB_SC_PDBIE | PDB_SC_DMAEN)
 
 const int analogOutPin = A21;
-long sinFreq = 10000; // Hz
+long sinFreq = 1000; // Hz
 
 DMAChannel dma1(true);
 
@@ -26,7 +26,21 @@ void setup() {
   // put your setup code here, to run once:
 
   Serial.begin(9600);
+  pinMode(13, OUTPUT);
+  digitalWrite(13, HIGH);
 
+  generateSignal();
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  delay(10000);
+  sinFreq = 10000;
+  delay(10000);
+  sinFreq = 1000;
+}
+
+void generateSignal(){
   // Set up clock gate for DAC0 (connected to A21)
   // See Sec. 12.2.9 (p. 308) of manual.
   // Also see values defined in kinetis.h
@@ -68,11 +82,4 @@ void setup() {
   PDB0_SC = PDB_CONFIG | PDB_SC_LDOK; // load registers from buffers
   PDB0_SC = PDB_CONFIG | PDB_SC_SWTRIG; // reset and restart
   PDB0_CH0C1 = 0x0101; // Enable pre-trigger
-  
-}
-
-void loop() {
-  // put your main code here, to run repeatedly:
-  //Serial.println("Hello world");
-  //delay(500);
 }

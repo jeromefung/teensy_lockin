@@ -22,7 +22,7 @@ const uint8_t pinN = A11;
 const int measPeriod_us = 100; // 10 kHz sampling for signal acquisition
 const int nPts = 10000;
 const int cutoffFreq = 1.0; // for LP filtering, in Hz
-long sinFreq = 10000; // Hz
+long sinFreq = 1000; // Hz
 const double referenceFreq = (double) sinFreq; // in Hz
 // **************************************************************
 
@@ -201,8 +201,8 @@ void mixAndFilter() {
     for (int coeffCtr = 0; coeffCtr < numCoeffs; coeffCtr++){
       sinTerm = sin(TWO_PI * referenceFreq * (n - coeffCtr) / samplingRate);
       cosTerm = cos(TWO_PI * referenceFreq * (n - coeffCtr) / samplingRate);                                // I think these should be switched back - recheck math
-      ynX = ynX + a[coeffCtr] * (double) mySignal[n - coeffCtr] * cosTerm  + b[coeffCtr] * yregX[coeffCtr]; // switched from sine to cosine
-      ynY = ynY + a[coeffCtr] * (double) mySignal[n - coeffCtr] * sinTerm  + b[coeffCtr] * yregY[coeffCtr]; // switched from cosine to sine
+      ynX = ynX + a[coeffCtr] * (double) mySignal[n - coeffCtr] * sinTerm  + b[coeffCtr] * yregX[coeffCtr]; // switched from sine to cosine
+      ynY = ynY + a[coeffCtr] * (double) mySignal[n - coeffCtr] * cosTerm  + b[coeffCtr] * yregY[coeffCtr]; // switched from cosine to sine
     }
     // Update registers, going backwards
     for (int coeffCtr = numCoeffs - 1; coeffCtr > 0; coeffCtr--){

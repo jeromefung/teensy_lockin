@@ -18,18 +18,18 @@ const uint8_t pinN = A11;
 // **************************************************************
 // Global variables -- user set
 const unsigned long countPeriod_ms = 5000; // Count duration for reference frequency measurement
-const int measPeriod_us = 100; // 10 kHz sampling for signal acquisition
 const int nPts = 10000;
-const int cutoffFreq = 1.0;                   // for LP filtering, in Hz
+const int cutoffFreq = 1.0; // for LP filtering, in Hz
 // **************************************************************
 
 // **************************************************************
 // Other global variables
 unsigned long edgeCounts;
-int samplingRate = 1000000 / measPeriod_us; // in Hz
+int samplingRate; //in Hz
+int measPeriod_us;
 const int analogOutPin = A21;
 long sinFreq;
-int referenceFreq;
+double referenceFreq;
 
 short mySignal[nPts]; // the raw digitized signal of interest
 ADC *adc = new ADC(); // create ADC object
@@ -38,8 +38,8 @@ bool validDiff;
 int measCtr = 0;
 int refVal, lastVal;
 
-const int numInstructChars = 32; //number of characters in each instruction sent to arduino
-char instruct[numInstructChars]; //array to store instruction in
+const int numInstructChars = 32; // number of characters in each instruction sent to arduino
+char instruct[numInstructChars]; // array to store instruction in
 
 IntervalTimer myTimer;
 
@@ -70,32 +70,46 @@ void setup()
 
 void loop()
 {
-  while(!Serial.available()){} //wait for instruction to be sent
-  char receivedChar;
-  int index = 0;
-  while(Serial.available() && receivedChar != "F"){
-    receivedChar = Serial.read();
-    instruct[index] = receivedChar;
-    index++;
-  }
+    while (!Serial.available())
+    {
+    } // wait for instruction to be sent
+    char receivedChar;
+    int index = 0;
+    while (Serial.available() && receivedChar != "F")
+    {
+        receivedChar = Serial.read();
+        instruct[index] = receivedChar;
+        index++;
+    }
 
-  //interpret the instruction
-  char* com = strtok(instruct, ":");
-  if (com == "0"){ //if internal reference
-    com = strtok(NULL, ":");
-    sinFreq = (long) atoi(com);
-    com = strtok(NULL, "F");
-    samplingRate = atoi(com);
-    referenceFreq = (double) sinFreq;
-    generateReferenceWave();
-  }
-  else{
-    com = strtok(NULL, "F");
-    samplingRate = atoi(com);
-  }
-  delay(1000);
-  Serial.flush(); //clear output buffer after new instruction has been recieved
-  measureLockIn(); //function to do lock in calculations and send data back to computer
+    // interpret the instruction
+    char *com = strtok(instruct, ":");
+    if (*com == '0')
+    { // if internal reference
+        com = strtok(NULL, ":");
+        sinFreq = (long)atoi(com);
+        com = strtok(NULL, "F");
+        samplingRate = atoi(com);
+        referenceFreq = (double)sinFreq;
+        generateReferenceWave();
+    }
+    else
+    {
+        com = strtok(NULL, "F");
+        samplingRate = atoi(com);
+        // Measure reference frequency
+        FreqCount.begin(countPeriod_ms);
+        while (FreqCount.available() == false) {
+            // Wait; do nothing
+        }
+        FreqCount.end();
+        edgeCounts = FreqCount.read();
+        referenceFreq = edgeCounts / (double) countPeriod_ms * 1000; // convert to get Hz
+    }
+    measPeriod_us = 1000000 / samplingRate;
+    delay(1000);
+    Serial.flush();  // clear output buffer after new instruction has been recieved
+    measureLockIn(); // function to do lock in calculations and send data back to computer
 }
 
 void generateReferenceWave()
@@ -134,7 +148,7 @@ void generateReferenceWave()
     // Calculate period between outputs
     uint32_t mod = F_BUS / (sinFreq * LUT_SIZE);
     delay(500);
-    //Serial.println(mod);
+    // Serial.println(mod);
 
     // See manual p. 935, sec 39.3.2 for PDB0_MOD register
     // Modulus of 1 actually means a period of 2 (counter resets back to 0 when it reaches PDB0_MOD)
@@ -173,7 +187,8 @@ void measureLockIn()
     calcFilterCoeffs();
 
     // Mix and filter the signal, a point at a time
-    mixAndFilter();
+    //mixAndFilter();
+    mixAndFilter2();
 }
 
 // Function called by IntervalTimer
@@ -210,21 +225,22 @@ void mixAndFilter()
     double yregY[numCoeffs];
     double ynX, ynY, sinTerm, cosTerm, R, phi;
 
-    //adding an initial value since (n-1) terms can be weird when n=0, signal weird at first too, may be worth starting at like n = 100
-    ynY = a[0] * (double) mySignal[0];
-    for (int i=0; i<numCoeffs; i++){
-      yregX[i] = 0;
-      yregY[i] = ynY;
+    // adding an initial value since (n-1) terms can be weird when n=0, signal weird at first too, may be worth starting at like n = 100
+    ynY = a[0] * (double)mySignal[0];
+    for (int i = 0; i < numCoeffs; i++)
+    {
+        yregX[i] = 0;
+        yregY[i] = ynY;
     }
 
     for (int n = 1; n < nPts; n++)
-    {       
+    {
         ynX = 0; // in phase
-        ynY = 0;// out of phase
+        ynY = 0; // out of phase
         for (int coeffCtr = 0; coeffCtr < numCoeffs; coeffCtr++)
         {
-          //why dividing by sampling rate?
-            sinTerm = sin(TWO_PI * referenceFreq * (n - coeffCtr) / samplingRate); //CHECK THIS - make sure that something are not being counted twice, but the sines and cosines are correct
+            // why dividing by sampling rate?
+            sinTerm = sin(TWO_PI * referenceFreq * (n - coeffCtr) / samplingRate); // CHECK THIS - make sure that something are not being counted twice, but the sines and cosines are correct
             cosTerm = cos(TWO_PI * referenceFreq * (n - coeffCtr) / samplingRate);
             ynX = ynX + a[coeffCtr] * (double)mySignal[n - coeffCtr] * sinTerm + b[coeffCtr] * yregX[coeffCtr];
             ynY = ynY + a[coeffCtr] * (double)mySignal[n - coeffCtr] * cosTerm + b[coeffCtr] * yregY[coeffCtr];
@@ -232,7 +248,7 @@ void mixAndFilter()
         // Update registers, going backwards
         for (int coeffCtr = numCoeffs - 1; coeffCtr > 0; coeffCtr--)
         {
-            if (coeffCtr == 1) //I think this is wrong - maybe overwriting the value first before moving things down the register
+            if (coeffCtr == 1) // I think this is wrong - maybe overwriting the value first before moving things down the register
             {
                 yregX[coeffCtr] = ynX;
                 yregY[coeffCtr] = ynY;
@@ -246,16 +262,84 @@ void mixAndFilter()
         // Calculate final values and print
         R = sqrt(ynX * ynX + ynY * ynY);
         phi = atan2(ynY, ynX);
-        Serial.print(mySignal[n]);//print data to serial
+        Serial.print(mySignal[n]); // print data to serial
         Serial.print(", ");
-        Serial.print(ynX);//in phase
+        Serial.print(ynX); // in phase
         Serial.print(", ");
-        Serial.print(ynY);//quadrature
+        Serial.print(ynY); // quadrature
+        Serial.print(", ");
+        Serial.print(R); // amplitude - will be 0.5 as much as input amplitude
+        Serial.print(", ");
+        Serial.println(phi); // phase
+        // Serial.print("E");
+        delay(2);
+    }
+}
+
+void mixAndFilter2()
+{   
+
+    //n_pts already exists in variable nPts
+    //do not need y since just print to serial
+    //n_coeffs already exists in numCoeffs
+    //x is signal, a is a, b is b
+    
+    //make a register for i and qthat is the number of coefficients long
+    //need to preload with zeros
+    double yregX[numCoeffs];
+    double yregY[numCoeffs];
+    for (int i = 0; i < numCoeffs; i++){
+        yregX[i] = 0.0;
+        yregY[i] = 0.0;
+    }
+
+    //create sum variables and sine and cosine terms
+    double ynX;
+    double ynY;
+    //need to loop over the number of points
+    for (int n = numCoeffs - 1; n < nPts; n++){
+        //need to initialize the sums
+        ynX = 0;
+        ynY = 0;
+        double sinTerm;
+        double cosTerm;
+        //now loop over coefficients - need to multiply the signal by sine and cosine
+        //need to figure out padding - from python - pad input circularly (e.g., x[-1]), and assume output y is initially 0.
+        //what if start from n = 1 (or more generally numCoeffs - 1), output is already initialized to be 0
+        for (int coeffCtr = 0; coeffCtr < numCoeffs; coeffCtr++){
+            sinTerm = sin(2 * PI * referenceFreq * ((n - coeffCtr) / ((double)samplingRate)));
+            cosTerm = cos(2 * PI * referenceFreq * ((n - coeffCtr) / ((double)samplingRate)));
+            ynX = ynX + a[coeffCtr] * (double)mySignal[n - coeffCtr] * sinTerm + b[coeffCtr] * yregX[coeffCtr];
+            ynY = ynY + a[coeffCtr] * (double)mySignal[n - coeffCtr] * cosTerm + b[coeffCtr] * yregY[coeffCtr];
+        }
+
+        //print output
+        double R;
+        double phi;
+        R = sqrt(ynX * ynX + ynY * ynY);
+        phi = atan2(ynY, ynX);
+        Serial.print(mySignal[n]); // print data to serial
+        Serial.print(", ");
+        Serial.print(ynX); // in phase
+        Serial.print(", ");
+        Serial.print(ynY); // quadrature
         Serial.print(", ");
         Serial.print(R); // amplitude - will be 0.5 as much as input amplitude
         Serial.print(", ");
         Serial.print(phi); // phase
         Serial.print("E");
+
+        //update registers by shifting yreg[n] to yreg[n+1]
+        for (int coeffCtr = numCoeffs - 1; coeffCtr > 0; coeffCtr--){
+            if (coeffCtr == 1){
+                yregX[coeffCtr] = ynX;
+                yregY[coeffCtr] = ynY;
+            }
+            else{
+                yregX[coeffCtr] = yregX[coeffCtr - 1];
+                yregY[coeffCtr] = yregY[coeffCtr - 1];
+            }
+        }
         delay(2);
     }
 }

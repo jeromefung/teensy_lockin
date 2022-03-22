@@ -4,6 +4,7 @@ import serial
 import pandas as pd
 import matplotlib.pyplot as plt
 import sys
+import time
 
 class lockInDetection(tk.Frame):
     '''
@@ -141,6 +142,8 @@ class lockInDetection(tk.Frame):
             while self.ser.in_waiting == 0: #while nothing in serial do nothing
                 pass
             d = ''
+            #use a timer to prevent infinite loops
+            start = time.time()
             while count < 9900: #expecting 10000 lines of data right now
                 temp = self.ser.read()
                 temp = str(temp)[2:-1]
@@ -149,7 +152,10 @@ class lockInDetection(tk.Frame):
                 else:
                     data.append(d)
                     d = ''
-                    count += 1      
+                    count += 1  
+                if (time.time() - start > 30): #if taking longer than 30 seconds
+                    print("Could not read all lines")
+                    break    
             data = data[:-1] #cutout last data point since is not actual data
             print("lines read:", len(data))
             data2D = []
