@@ -57,16 +57,16 @@ class lockInDetection(tk.Frame):
         serPortLabel = tk.Label(self.parent, text="Serial Port Number (1-256):")
         serPortLabel.grid(row=1, column=0, columnspan=1, sticky=tk.W+tk.E)
 
-        serStartButton = tk.Button(
-            self.parent, text="Start Serial", command=lambda: self.startSerial(serPort))
-        serStartButton.grid(row=1, column=2, sticky=tk.W+tk.E)
+        #serStartButton = tk.Button(
+        #    self.parent, text="Start Serial", command=lambda: self.startSerial(serPort))
+        #serStartButton.grid(row=1, column=2, sticky=tk.W+tk.E)
 
-        serEndButton = tk.Button(
-            self.parent, text="Close Serial", command=lambda: self.endSerial())
-        serEndButton.grid(row=1, column=4, sticky=tk.W+tk.E)
+        #serEndButton = tk.Button(
+        #    self.parent, text="Close Serial", command=lambda: self.endSerial())
+        #serEndButton.grid(row=1, column=4, sticky=tk.W+tk.E)
 
         startButton = tk.Button(self.parent, text="Start",
-                                command=lambda: self.startTeensy(frequencyEntry, sampleEntry))
+                                command=lambda: self.startTeensy(frequencyEntry, sampleEntry, serPort))
         startButton.grid(row=8, columnspan=6, sticky=tk.W+tk.E)
 
         saveButton = tk.Button(self.parent, text="Save Data",
@@ -94,12 +94,13 @@ class lockInDetection(tk.Frame):
         except:
             print("No serial port open")
 
-    def startTeensy(self, refFreq, sampRate):
+    def startTeensy(self, refFreq, sampRate, serPort):
         '''
         Uploads script to arduino and processes the data recieved
         Returns True if successful and false if not
         '''
         try:
+            self.startSerial(serPort) #start the serial port
             self.ser.reset_output_buffer()
             self.ser.reset_input_buffer()
             if self.refSelect.get() == 0:  # internal reference selected
@@ -181,6 +182,7 @@ class lockInDetection(tk.Frame):
             plt.show() #fix to allow to save data without having to close plot
             print(dataDf.head())
             self.DataDf = dataDf
+            self.endSerial()
             return True
         except Exception as e:
             print("Failed in processData")
