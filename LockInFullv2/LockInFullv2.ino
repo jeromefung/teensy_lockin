@@ -14,6 +14,7 @@
 
 // **************************************************************
 // Pin configurations
+const uint8_t referencePin = 13;
 // Connect signal to be measured to analog pins A10/A11 (differential channel 3)
 const uint8_t pinP = A10;
 const uint8_t pinN = A11;
@@ -45,6 +46,7 @@ int refVal, lastVal;
 
 const int numInstructChars = 32; // number of characters in each instruction sent to arduino
 char instruct[numInstructChars]; // array to store instruction in
+bool externalFlag;
 
 IntervalTimer myTimer;
 
@@ -64,6 +66,15 @@ void setup()
     pinMode(pinP, INPUT);
     pinMode(pinN, INPUT);
 
+    // ADC setup
+    adc->adc0->differentialMode(); // TODO: is this needed? not sure.
+    adc->adc0->setResolution(13);  // A10, A11 connected to ADC1 only
+    adc->adc0->setAveraging(0);
+    adc->adc0->setConversionSpeed(ADC_CONVERSION_SPEED::HIGH_SPEED); // changes ADC clock
+    adc->adc0->setSamplingSpeed(ADC_SAMPLING_SPEED::LOW_SPEED);      // change the sampling speed
+    validDiff = adc->adc1->checkDifferentialPins(pinP, pinN);
+    delay(1000);
+    
     //get instruction from computer, program will not do anything until it knows what it needs to do
     while (!Serial.available())
     {
@@ -81,6 +92,7 @@ void setup()
     char *com = strtok(instruct, ":");
     if (*com == '0')
     { // if internal reference
+        externalFlag = false;
         com = strtok(NULL, ":");
         sinFreq = (long)atoi(com);
         com = strtok(NULL, "F");
@@ -90,27 +102,11 @@ void setup()
     }
     else
     {
+        externalFlag = true;
         com = strtok(NULL, "F");
         samplingRate = atoi(com);
-        // Measure reference frequency
-        FreqCount.begin(countPeriod_ms);
-        while (FreqCount.available() == false) {
-            // Wait; do nothing
-        }
-        FreqCount.end();
-        edgeCounts = FreqCount.read();
-        referenceFreq = edgeCounts / (double) countPeriod_ms * 1000; // convert to get Hz
     }
     measPeriod_us = 1000000 / samplingRate;
-    delay(1000);
-
-    // ADC setup
-    adc->adc0->differentialMode(); // TODO: is this needed? not sure.
-    adc->adc0->setResolution(13);  // A10, A11 connected to ADC1 only
-    adc->adc0->setAveraging(0);
-    adc->adc0->setConversionSpeed(ADC_CONVERSION_SPEED::HIGH_SPEED); // changes ADC clock
-    adc->adc0->setSamplingSpeed(ADC_SAMPLING_SPEED::LOW_SPEED);      // change the sampling speed
-    validDiff = adc->adc1->checkDifferentialPins(pinP, pinN);
     delay(1000);
     measureLockIn();
     delay(10000);
@@ -180,6 +176,29 @@ void measureLockIn()
     // Reset flag and signal array index
     daqDone = false;
     measCtr = 0;
+
+    // Wait for rising edge of reference signal before starting digitization.
+    // Otherwise phase info is meaningless.
+    if(externalFlag){
+      // Measure reference frequency
+        FreqCount.begin(countPeriod_ms);
+        while (FreqCount.available() == false) {
+            // Wait; do nothing
+        }
+        FreqCount.end();
+        edgeCounts = FreqCount.read();
+        referenceFreq = edgeCounts / (double) countPeriod_ms * 1000; // convert to get Hz
+      lastVal = digitalRead(referencePin);
+      while (true) {
+        refVal = digitalRead(referencePin);
+        if ((refVal == 1) && (lastVal ==0)) {
+          break;
+        }
+        else{
+          lastVal = refVal;
+        }
+      }
+    }
 
     // Digitize the signal
     myTimer.begin(digitizeSignal, measPeriod_us);

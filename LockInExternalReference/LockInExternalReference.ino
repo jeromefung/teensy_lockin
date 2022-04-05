@@ -66,10 +66,12 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   // Wait for button to be pressed
-  while (digitalRead(buttonPin) == 1) {
+  //while (digitalRead(buttonPin) == 1) {
     // do nothing
-  }
-  Serial.println("Button Pressed");
+  //}
+  //Serial.println("Button Pressed");
+
+  delay(1000);
 
   // Fold out measurement into a function that can be called repeatedly
   measureLockIn();

@@ -118,7 +118,7 @@ class lockInDetection(tk.Frame):
                 try:
                     sampRate = int(sampRate.get()) #get sample rate
                 except:
-                    sampRate = 100000
+                    sampRate = 10000
                 #make instruction string
                 stringToSend = "1:" + str(sampRate) + "F"
             
@@ -154,6 +154,8 @@ class lockInDetection(tk.Frame):
                     data.append(d)
                     d = ''
                     count += 1  
+                    if count % 1000 == 0:
+                        print(count, "lines read of 10000")
                 if (time.time() - start > 30): #if taking longer than 30 seconds
                     print("Could not read all lines")
                     break    
@@ -173,13 +175,18 @@ class lockInDetection(tk.Frame):
             dataDf.columns = ["Signal", "I", "Q", "R", "Phi"] #set dataframe column names
             #plt.tick_params(axis= "x", which = "both", bottom = False, top = False)
             #plt.xticks(dataDf.index, " ")
+            plt.figure()
+            plt.plot(dataDf.index[:200], dataDf["Signal"][:200]*3.3/4096)
+            plt.ylabel("Voltage (V)", fontsize=20)
+            plt.title("Measured Signal", fontsize = 25)
+            plt.show(block=False)
             fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True) #plot the data
             ax1.plot(dataDf.index, 2*dataDf["R"]*3.3/4096)
             ax1.set_ylabel("Amplitude (V)", fontsize=20)
             ax1.set_title("Lock-in Detection Results", fontsize= 25)
             ax2.plot(dataDf.index, dataDf["Phi"])
             ax2.set_ylabel("Phase (radians)", fontsize=20)
-            plt.show() #fix to allow to save data without having to close plot
+            plt.show(block=False)
             print(dataDf.head())
             self.DataDf = dataDf
             self.endSerial()
