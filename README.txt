@@ -16,3 +16,4 @@ tkinter - the python library used for making gui's
 pyserial - the python library for serial communication
 pandas - useful for dealing with datasets, makes dataframes
 matplotlib - used for creating graphs
+time - used for ensuring the GUI does not get stuck when reading data from Teensy
