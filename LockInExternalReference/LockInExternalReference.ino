@@ -1,14 +1,3 @@
-/* LockInExternalReference.ino
- *
- * Jerome Fung
- *
- * Perform lock-in detection of a signal with an external frequency reference
- * using a Teensy 3.5.
- *
- * External reference should be a square wave.
- *
- */
-
 #include <FreqCount.h>
 #include <ADC.h>
 #include <math.h>
@@ -77,9 +66,12 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   // Wait for button to be pressed
-  while (digitalRead(buttonPin) == 1) {
+  //while (digitalRead(buttonPin) == 1) {
     // do nothing
-  }
+  //}
+  //Serial.println("Button Pressed");
+
+  delay(1000);
 
   // Fold out measurement into a function that can be called repeatedly
   measureLockIn();
@@ -172,8 +164,8 @@ void mixAndFilter() {
     for (int coeffCtr = 0; coeffCtr < numCoeffs; coeffCtr++){
       sinTerm = sin(TWO_PI * referenceFreq * (n - coeffCtr) / samplingRate);
       cosTerm = cos(TWO_PI * referenceFreq * (n - coeffCtr) / samplingRate);
-      ynX = ynX + a[coeffCtr] * (double) mySignal[n - coeffCtr] * sinTerm  + b[coeffCtr] * yregX[coeffCtr];
-      ynY = ynY + a[coeffCtr] * (double) mySignal[n - coeffCtr] * cosTerm  + b[coeffCtr] * yregY[coeffCtr];
+      ynX = ynX + a[coeffCtr] * (double) mySignal[n - coeffCtr] * cosTerm  + b[coeffCtr] * yregX[coeffCtr];
+      ynY = ynY + a[coeffCtr] * (double) mySignal[n - coeffCtr] * sinTerm  + b[coeffCtr] * yregY[coeffCtr];
     }
     // Update registers, going backwards
     for (int coeffCtr = numCoeffs - 1; coeffCtr > 0; coeffCtr--){

@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "hidsdi.h": "c",
+        "cmath": "cpp",
+        "istream": "cpp"
+    }
+}

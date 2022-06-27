@@ -89,16 +89,16 @@ void setup() {
   
   // Print some dividing lines
   for (int i = 0; i < 10; i++){
-    //Serial.println("Filtered data follows");
+    Serial.println("Filtered data follows");
   }
 
   // Calculate coefficients and filter the signal
   calcFilterCoeffs();
   filterSignal();
   
-  //for (int i = 0; i < 10; i++){
-  //  Serial.println("EOF");
-  //}
+  for (int i = 0; i < 10; i++){
+    Serial.println("EOF");
+  }
 }
 
 // Function called by IntervalTimer
@@ -157,7 +157,7 @@ void filterSignal(){
         y_reg[coeffCtr] = y_reg[coeffCtr - 1];
       }
     }
-    //Serial.println(yn, 16);
+    Serial.println(yn, 16);
   }
 }
 
