@@ -20,9 +20,10 @@ void setup() {
   pinMode(buttonPin, INPUT_PULLUP);
 
   // Wait until button gets pressed
-  while (digitalRead(buttonPin) == 1) {
+  //while (digitalRead(buttonPin) == 1) {
     // wait, do nothing
-  }
+  //}
+  delay(2000);
   
   // begin counting. Signal must be connected to pin 13!
   FreqCount.begin(countPeriod_ms);

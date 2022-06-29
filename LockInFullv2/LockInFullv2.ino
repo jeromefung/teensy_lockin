@@ -74,6 +74,22 @@ void setup()
     adc->adc0->setSamplingSpeed(ADC_SAMPLING_SPEED::LOW_SPEED);      // change the sampling speed
     validDiff = adc->adc1->checkDifferentialPins(pinP, pinN);
     delay(1000);
+
+    // test block
+    //Serial.println(countPeriod_ms);
+    //FreqCount.begin(countPeriod_ms);
+    //while (FreqCount.available() == false) {
+            // Wait; do nothing
+    //}
+    //FreqCount.end();
+    //edgeCounts = FreqCount.read();
+    //referenceFreq = edgeCounts / (double) countPeriod_ms * 1000; // convert to get Hz
+    //Serial.println("Edges: ");
+    //Serial.println(edgeCounts);
+    //Serial.println("Reference freq: ");
+    //Serial.println(referenceFreq);
+    //Serial.println(FreqCount.read());
+    // end test block
     
     //get instruction from computer, program will not do anything until it knows what it needs to do
     while (!Serial.available())
@@ -145,7 +161,7 @@ void generateReferenceWave()
     dma1.transferSize(2);                                  // each value is 2 bytes
     dma1.destination(*(volatile uint16_t *)&(DAC0_DAT0L)); // send to DAC
     dma1.triggerAtHardwareEvent(DMAMUX_SOURCE_PDB);        // set trigger to PDB
-    dma1.enable();
+    // dma1.enable(); // Don't enable sine output until start of measurements
 
     // Now set up PDB
     SIM_SCGC6 |= SIM_SCGC6_PDB; // Enable PDB clock. Again, see manual and kinetis.h
@@ -188,20 +204,30 @@ void measureLockIn()
         FreqCount.end();
         edgeCounts = FreqCount.read();
         referenceFreq = edgeCounts / (double) countPeriod_ms * 1000; // convert to get Hz
-      lastVal = digitalRead(referencePin);
-      while (true) {
-        refVal = digitalRead(referencePin);
-        if ((refVal == 1) && (lastVal ==0)) {
-          break;
-        }
-        else{
-          lastVal = refVal;
-        }
-      }
+      //lastVal = digitalRead(referencePin);
+      //while (true) {
+      //  refVal = digitalRead(referencePin);
+      //  if ((refVal == 1) && (lastVal ==0)) {
+      //    break;
+      //  }
+      //  else{
+      //    lastVal = refVal;
+      //  }
+      //}
+
+      // use interrupt for precise timing of start of measurements
+      attachInterrupt(digitalPinToInterrupt(referencePin), extMeasISR, RISING);
+      
+    }
+    else { // internal reference mode
+        dma1.enable();
+        digitizeSignal();
+        myTimer.begin(digitizeSignal, measPeriod_us); // digitize
     }
 
     // Digitize the signal
-    myTimer.begin(digitizeSignal, measPeriod_us);
+    //myTimer.begin(digitizeSignal, measPeriod_us);
+    
     // wait for measurements to complete
     // check flag set by measureSignal()
     while (daqDone == false)
@@ -216,6 +242,13 @@ void measureLockIn()
 
     // Mix and filter the signal, a point at a time
     mixAndFilter();
+}
+
+// Start digitizing signal on rising edge of external reference signal
+void extMeasISR() {
+  detachInterrupt(digitalPinToInterrupt(referencePin));
+  digitizeSignal();
+  myTimer.begin(digitizeSignal, measPeriod_us);  
 }
 
 // Function called by IntervalTimer
