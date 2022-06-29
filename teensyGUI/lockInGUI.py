@@ -79,13 +79,13 @@ class lockInDetection(tk.Frame):
             port = serPort.get()
         except:
             print("Serial Port Not Specified")
-        port = "COM" + port
+        #port = "COM" + port
         try:
             self.ser = serial.Serial(port, 38400, timeout=None, write_timeout=10)
             self.ser.set_buffer_size(rx_size= 100000, tx_size=4096)
             print("Successful")
         except:
-            print("Could not connect to serial port")
+            print("Could not connect to serial port, " + port)
 
     def endSerial(self):
         '''Closes serial port'''
