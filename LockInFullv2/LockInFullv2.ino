@@ -24,6 +24,7 @@ const uint8_t pinN = A11;
 // **************************************************************
 // Global variables -- user set
 unsigned long countPeriod_ms = 5000; // Count duration for reference frequency measurement
+const int maxPts = 15000;
 int nPts = 10000;
 const int cutoffFreq = 5.0; // for LP filtering, in Hz
 // **************************************************************
@@ -38,7 +39,7 @@ long sinFreq;
 double referenceFreq;
 int filterPole;
 
-short mySignal[nPts]; // the raw digitized signal of interest
+short mySignal[maxPts]; // the raw digitized signal of interest
 ADC *adc = new ADC(); // create ADC object
 volatile bool daqDone = false;
 bool validDiff;
@@ -131,6 +132,9 @@ void setup()
         generateReferenceWave();
     }
     measPeriod_us = 1000000 / samplingRate;
+    if (nPts > maxPts){
+        nPts = maxPts;
+    }
     delay(1000);
     measureLockIn();
     delay(10000);
