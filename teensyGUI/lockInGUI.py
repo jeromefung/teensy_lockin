@@ -46,7 +46,7 @@ class lockInDetection(tk.Frame):
             self.frequencyLabel = tk.Label(self.parent, text="Internal Reference Frequency:")
             self.frequencyLabel.grid(row=freqLabelRow, columnspan=6, sticky=tk.W+tk.E)
         def external():
-            self.frequencyLabel = tk.Label(self.parent, text="External Reference Frequency Count Duration (default 5 sec):")
+            self.frequencyLabel = tk.Label(self.parent, text="External Reference Frequency Count Duration (default 5000 ms):")
             self.frequencyLabel.grid(row=freqLabelRow, columnspan=6, sticky=tk.W+tk.E)
 
         #reference signal
