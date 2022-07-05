@@ -41,7 +41,7 @@ class lockInDetection(tk.Frame):
         r += 1
 
         #change options based off reference mode
-        self.frequencyLabel = tk.Label(self.parent, text="")
+        self.frequencyLabel = tk.Label(self.parent, text="Internal Reference Frequency:")
         def internal():
             self.frequencyLabel = tk.Label(self.parent, text="Internal Reference Frequency:")
             self.frequencyLabel.grid(row=freqLabelRow, columnspan=6, sticky=tk.W+tk.E)
@@ -51,7 +51,7 @@ class lockInDetection(tk.Frame):
 
         #reference signal
         internalButton = tk.Radiobutton(self.parent, text="Internal Reference", variable=self.refSelect, value=0, command=lambda: internal())
-        internalButton.deselect()
+        internalButton.select()
         internalButton.grid(row=r, columnspan=6, sticky=tk.W+tk.E)
         r += 1
         externalButton = tk.Radiobutton(self.parent, text="External Reference", variable=self.refSelect, value=1, command=lambda: external())
