@@ -23,7 +23,7 @@ const uint8_t pinN = A11;
 
 // **************************************************************
 // Global variables -- user set
-const unsigned long countPeriod_ms = 5000; // Count duration for reference frequency measurement
+unsigned long countPeriod_ms = 5000; // Count duration for reference frequency measurement
 const int nPts = 10000;
 const int cutoffFreq = 5.0; // for LP filtering, in Hz
 // **************************************************************
@@ -36,6 +36,7 @@ int measPeriod_us;
 const int analogOutPin = A21;
 long sinFreq;
 double referenceFreq;
+int filterPole;
 
 short mySignal[nPts]; // the raw digitized signal of interest
 ADC *adc = new ADC(); // create ADC object
@@ -111,16 +112,23 @@ void setup()
         externalFlag = false;
         com = strtok(NULL, ":");
         sinFreq = (long)atoi(com);
-        com = strtok(NULL, "F");
-        samplingRate = atoi(com);
-        referenceFreq = (double)sinFreq;
-        generateReferenceWave();
     }
     else
     {
         externalFlag = true;
-        com = strtok(NULL, "F");
-        samplingRate = atoi(com);
+        com = strtok(NULL, ":");
+        countPeriod_ms = (unsigned long)atoi(com);
+    }
+    com = strtok(NULL, ":");
+    samplingRate = atoi(com);
+    com = strtok(NULL, ":");
+    nPts = atoi(com);
+    com = strtok(NULL, "F");
+    filterPole = atoi(com);
+    if (!externalFlag)
+    {
+        referenceFreq = (double)sinFreq;
+        generateReferenceWave();
     }
     measPeriod_us = 1000000 / samplingRate;
     delay(1000);
@@ -238,7 +246,20 @@ void measureLockIn()
     myTimer.end();
 
     // Set up filter coefficients
-    calcFilterCoeffs2p();
+    if (filterPole == 1){
+        calcFilterCoeffs();
+    }
+    else if (filterPole == 2){
+        calcFilterCoeffs2p();
+    }
+    else if (filterPole == 3){
+        // for 3rd stage - just use 2nd temporarily
+        calcFilterCoeffs2p();
+    }
+    else{
+        // for 4th stage - just use 2nd temporarily
+        calcFilterCoeffs2p();
+    }
 
     // Mix and filter the signal, a point at a time
     mixAndFilter();

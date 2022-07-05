@@ -161,13 +161,13 @@ class lockInDetection(tk.Frame):
                 self.ser.write(str(stringToSend).encode('utf-8'))
             except:
                 print("writing timed out")
-            self.processData()
+            self.processData(numPoints)
             return True
         except:
             print("Failed in startTeensy")
             return False
 
-    def processData(self):
+    def processData(self, numPoints):
         '''
         Processes the data, returns true if successful, false if otherwise
         '''
@@ -177,9 +177,13 @@ class lockInDetection(tk.Frame):
             while self.ser.in_waiting == 0: #while nothing in serial do nothing
                 pass
             d = ''
+            if numPoints > 100:
+                cutoff = numPoints - 100
+            else:
+                cutoff = numPoints
             #use a timer to prevent infinite loops
             start = time.time()
-            while count < 9900: #expecting 10000 lines of data right now
+            while count < cutoff: #expecting 10000 lines of data right now
                 temp = self.ser.read()
                 temp = str(temp)[2:-1]
                 if (temp != 'E'):
