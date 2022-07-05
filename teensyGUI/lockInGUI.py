@@ -31,47 +31,80 @@ class lockInDetection(tk.Frame):
 
     def createWidgets(self):
         '''Creates all the widgets needed for the GUI'''
-        frequencyEntry = tk.Entry(self.parent)
-        frequencyEntry.grid(row=5, columnspan=6, sticky=tk.W+tk.E)
-        frequencyLabel = tk.Label(
-            self.parent, text="Internal Reference Frequency:")
-        frequencyLabel.grid(row=4, columnspan=6, sticky=tk.W+tk.E)
+        r = 1
 
-        sampleEntry = tk.Entry(self.parent)
-        sampleEntry.grid(row=7, columnspan=6, sticky=tk.W+tk.E)
-        sampleLabel = tk.Label(self.parent, text="Sampling Rate (if unsure leave empty):") #maybe change to dropdown menu in the future
-        sampleLabel.grid(row=6, columnspan=6, sticky=tk.W+tk.E)
-
-        internalButton = tk.Radiobutton(
-            self.parent, text="Internal Reference", variable=self.refSelect, value=0)
-        internalButton.deselect()
-        internalButton.grid(row=2, columnspan=6, sticky=tk.W+tk.E)
-        externalButton = tk.Radiobutton(
-            self.parent, text="External Reference", variable=self.refSelect, value=1)
-        externalButton.deselect()
-        externalButton.grid(row=3, columnspan=6, sticky=tk.W+tk.E)
-
+        #serial port
+        serPortLabel = tk.Label(self.parent, text="Serial Port:")
+        serPortLabel.grid(row=r, column=0, columnspan=1, sticky=tk.W+tk.E)
         serPort = tk.Entry(self.parent)
-        serPort.grid(row=1, column=1, sticky=tk.W+tk.E)
+        serPort.grid(row=r, column=1, sticky=tk.W+tk.E)
+        r += 1
 
-        serPortLabel = tk.Label(self.parent, text="Serial Port Number (1-256):")
-        serPortLabel.grid(row=1, column=0, columnspan=1, sticky=tk.W+tk.E)
+        #change options based off reference mode
+        self.frequencyLabel = tk.Label(self.parent, text="")
+        def internal():
+            self.frequencyLabel = tk.Label(self.parent, text="Internal Reference Frequency:")
+            self.frequencyLabel.grid(row=freqLabelRow, columnspan=6, sticky=tk.W+tk.E)
+        def external():
+            self.frequencyLabel = tk.Label(self.parent, text="External Reference Frequency Count Duration (default 5 sec):")
+            self.frequencyLabel.grid(row=freqLabelRow, columnspan=6, sticky=tk.W+tk.E)
 
-        #serStartButton = tk.Button(
-        #    self.parent, text="Start Serial", command=lambda: self.startSerial(serPort))
-        #serStartButton.grid(row=1, column=2, sticky=tk.W+tk.E)
+        #reference signal
+        internalButton = tk.Radiobutton(self.parent, text="Internal Reference", variable=self.refSelect, value=0, command=lambda: internal())
+        internalButton.deselect()
+        internalButton.grid(row=r, columnspan=6, sticky=tk.W+tk.E)
+        r += 1
+        externalButton = tk.Radiobutton(self.parent, text="External Reference", variable=self.refSelect, value=1, command=lambda: external())
+        externalButton.deselect()
+        externalButton.grid(row=r, columnspan=6, sticky=tk.W+tk.E)
+        r += 1
 
-        #serEndButton = tk.Button(
-        #    self.parent, text="Close Serial", command=lambda: self.endSerial())
-        #serEndButton.grid(row=1, column=4, sticky=tk.W+tk.E)
+        #internal or external ref freq
+        self.frequencyLabel.grid(row=r, columnspan=6, sticky=tk.W+tk.E)
+        freqLabelRow = r
+        r += 1
+        frequencyEntry = tk.Entry(self.parent)
+        frequencyEntry.grid(row=r, columnspan=6, sticky=tk.W+tk.E)
+        r += 1
 
-        startButton = tk.Button(self.parent, text="Start",
-                                command=lambda: self.startTeensy(frequencyEntry, sampleEntry, serPort))
-        startButton.grid(row=8, columnspan=6, sticky=tk.W+tk.E)
+        #sampling rate
+        sampleLabel = tk.Label(self.parent, text="Sampling Rate (default 10,000):") #maybe change to dropdown menu in the future
+        sampleLabel.grid(row=r, columnspan=6, sticky=tk.W+tk.E)
+        r += 1
+        sampleEntry = tk.Entry(self.parent)
+        sampleEntry.grid(row=r, columnspan=6, sticky=tk.W+tk.E)
+        r += 1
 
-        saveButton = tk.Button(self.parent, text="Save Data",
-                                command=lambda: self.saveData())
-        saveButton.grid(row=9, columnspan=6, sticky=tk.W+tk.E)
+        #number of data points
+        numPointsLabel = tk.Label(self.parent, text="Number of points to measure (default 10,000):")
+        numPointsLabel.grid(row=r, columnspan=6, sticky=tk.W+tk.E)
+        r += 1
+        numPointsEntry = tk.Entry(self.parent)
+        numPointsEntry.grid(row = r, columnspan = 6, sticky=tk.W+tk.E)
+        r += 1
+
+        #low pass filter
+        filterCutoffLabel = tk.Label(self.parent, text="LP Cutoff Freq (default 5.0):")
+        filterCutoffLabel.grid(row=r, column = 0, sticky=tk.W+tk.E)
+        filterCutoffEntry = tk.Entry(self.parent)
+        filterCutoffEntry.grid(row=r, column=1, sticky=tk.W+tk.E)
+        filterStageLabel = tk.Label(self.parent, text="Filter Order:")
+        filterStageLabel.grid(row = r, column = 2, sticky=tk.W+tk.E)
+        filterStageOptions = [1, 2, 3, 4]
+        filterStageSelected = tk.IntVar()
+        filterStageSelected.set(1)
+        filterStageMenu = tk.OptionMenu(self.parent, filterStageSelected, *filterStageOptions)
+        filterStageMenu.grid(row=r, column = 3, sticky=tk.W+tk.E)
+        r += 1
+
+        #start button
+        startButton = tk.Button(self.parent, text="Start", command=lambda: self.startTeensy(frequencyEntry, sampleEntry, numPointsEntry, filterStageSelected, serPort))
+        startButton.grid(row=r, columnspan=6, sticky=tk.W+tk.E)
+        r += 1
+
+        #save button
+        saveButton = tk.Button(self.parent, text="Save Data", command=lambda: self.saveData())
+        saveButton.grid(row=r, columnspan=6, sticky=tk.W+tk.E)
 
     def startSerial(self, serPort):
         '''Opens serial port'''
@@ -94,7 +127,7 @@ class lockInDetection(tk.Frame):
         except:
             print("No serial port open")
 
-    def startTeensy(self, refFreq, sampRate, serPort):
+    def startTeensy(self, refFreqOrDur, sampRate, numPoints, filterStage, serPort):
         '''
         Uploads script to arduino and processes the data recieved
         Returns True if successful and false if not
@@ -103,25 +136,26 @@ class lockInDetection(tk.Frame):
             self.startSerial(serPort) #start the serial port
             self.ser.reset_output_buffer()
             self.ser.reset_input_buffer()
+            try:
+                sampRate = int(sampRate.get()) #get sample rate
+            except:
+                sampRate = 10000
+            try:
+                numPoints = int(numPoints.get())
+            except:
+                numPoints = 10000
+            filterStage = filterStage.get()
             if self.refSelect.get() == 0:  # internal reference selected
                 try:
-                    refFreq = int(refFreq.get())
+                    refFreqOrDur = int(refFreqOrDur.get())
                 except:
                     return False
-                try:
-                    sampRate = int(sampRate.get()) #get sample rate
-                except:
-                    sampRate = 10000
-                #make instruction string
-                stringToSend = "0:" + str(refFreq) + ":" + str(sampRate) + "F"
             else:
                 try:
-                    sampRate = int(sampRate.get()) #get sample rate
+                    refFreqOrDur = int(refFreqOrDur.get())
                 except:
-                    sampRate = 10000
-                #make instruction string
-                stringToSend = "1:" + str(sampRate) + "F"
-            
+                    refFreqOrDur = 5000
+            stringToSend = "0:" + str(refFreqOrDur) + ":" + str(sampRate) + ":" + str(numPoints) + ":" + str(filterStage) + "F"
             #send data
             try:
                 self.ser.write(str(stringToSend).encode('utf-8'))
