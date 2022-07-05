@@ -76,7 +76,7 @@ class lockInDetection(tk.Frame):
         r += 1
 
         #number of data points
-        numPointsLabel = tk.Label(self.parent, text="Number of points to measure (default 10,000):")
+        numPointsLabel = tk.Label(self.parent, text="Number of Points to Measure (default 10,000):")
         numPointsLabel.grid(row=r, columnspan=6, sticky=tk.W+tk.E)
         r += 1
         numPointsEntry = tk.Entry(self.parent)
