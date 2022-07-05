@@ -155,7 +155,7 @@ class lockInDetection(tk.Frame):
                     refFreqOrDur = int(refFreqOrDur.get())
                 except:
                     refFreqOrDur = 5000
-            stringToSend = "0:" + str(refFreqOrDur) + ":" + str(sampRate) + ":" + str(numPoints) + ":" + str(filterStage) + "F"
+            stringToSend = str(self.refSelect.get()) + ":" + str(refFreqOrDur) + ":" + str(sampRate) + ":" + str(numPoints) + ":" + str(filterStage) + "F"
             #send data
             try:
                 self.ser.write(str(stringToSend).encode('utf-8'))
