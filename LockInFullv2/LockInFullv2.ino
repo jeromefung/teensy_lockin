@@ -25,7 +25,7 @@ const uint8_t pinN = A11;
 // Global variables -- user set
 const unsigned long countPeriod_ms = 5000; // Count duration for reference frequency measurement
 const int nPts = 10000;
-const int cutoffFreq = 1.0; // for LP filtering, in Hz
+const int cutoffFreq = 5.0; // for LP filtering, in Hz
 // **************************************************************
 
 // **************************************************************
@@ -53,7 +53,7 @@ IntervalTimer myTimer;
 DMAChannel dma1(true);
 
 // LP filter coefficients
-const int numCoeffs = 2;
+const int numCoeffs = 3;
 double a[numCoeffs];
 double b[numCoeffs];
 // **************************************************************
@@ -238,7 +238,7 @@ void measureLockIn()
     myTimer.end();
 
     // Set up filter coefficients
-    calcFilterCoeffs();
+    calcFilterCoeffs2p();
 
     // Mix and filter the signal, a point at a time
     mixAndFilter();
@@ -276,6 +276,19 @@ void calcFilterCoeffs()
     a[1] = 0;
     b[0] = 0; // for simplicity
     b[1] = filterX;
+}
+
+void calcFilterCoeffs2p()
+{
+    // Implement 2-stage single-pole recursive filtering
+    // See http://www.dspguide.com/ch19/2.htm
+    double filterX = exp(-2 * PI * cutoffFreq / samplingRate);
+    a[0] = pow(1 - filterX, 2);
+    a[1] = 0;
+    a[2] = 0;
+    b[0] = 0; // for simplicity
+    b[1] = 2 * filterX;
+    b[2] = -pow(filterX, 2);
 }
 
 void mixAndFilter()
