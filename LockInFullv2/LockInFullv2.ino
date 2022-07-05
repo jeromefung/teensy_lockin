@@ -24,7 +24,7 @@ const uint8_t pinN = A11;
 // **************************************************************
 // Global variables -- user set
 unsigned long countPeriod_ms = 5000; // Count duration for reference frequency measurement
-const int nPts = 10000;
+int nPts = 10000;
 const int cutoffFreq = 5.0; // for LP filtering, in Hz
 // **************************************************************
 
