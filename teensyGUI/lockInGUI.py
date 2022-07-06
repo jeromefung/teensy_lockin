@@ -269,10 +269,10 @@ class lockInDetection(tk.Frame):
             startIdx = int((self.percent.get() / 100) * len(self.DataDf["R"]))
             for amp in self.DataDf["R"][startIdx:]:
                 amplitudeAverage += (2*amp*3.3/4096)
-            print("Average Measured Amplitude:", amplitudeAverage/len(self.DataDf["R"]))
+            print("Average Measured Amplitude:", amplitudeAverage/len(self.DataDf["R"][startIdx:]))
             for phase in self.DataDf["Phi"][startIdx:]:
                 phaseAverage += phase
-            print("Average Measured Phase:", phaseAverage/len(self.DataDf["Phi"]))
+            print("Average Measured Phase:", phaseAverage/len(self.DataDf["Phi"][startIdx:]))
         except:
             print("Error in calculating Averages")
     
