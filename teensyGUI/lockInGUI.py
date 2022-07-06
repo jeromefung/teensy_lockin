@@ -214,12 +214,15 @@ class lockInDetection(tk.Frame):
                 print("Measured External Reference Frequency [Hz]:", externalRefFreq)
             
             d = ''
+            start = time.time()
             while True:
                 temp = self.ser.read()
                 temp = str(temp)[2:-1]
                 if (temp != 'E'):
                     d = d + temp
                 else:
+                    break
+                if (time.time()-start > 30): #prevent infinite loop
                     break
             d = d.split(',')
             print("Average Amplitude:", d[0], "Average Phase:", d[1])            
