@@ -205,6 +205,12 @@ class lockInDetection(tk.Frame):
             count = 0
             while self.ser.in_waiting == 0: #while nothing in serial do nothing
                 pass
+            
+            #unsure if this will work for getting external ref freq - needs to be tested
+            if self.refSelect.get() == 1:
+                externalRefFreq = self.ser.readline()
+                print("Measured External Reference Frequency:", externalRefFreq)
+            
             d = ''
             if numPoints > 100:
                 cutoff = numPoints - 100

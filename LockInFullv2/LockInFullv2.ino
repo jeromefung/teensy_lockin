@@ -267,6 +267,11 @@ void measureLockIn()
         calcFilterCoeffs2p();
     }
 
+    // Display measured external reference right before mixing and filtering
+    if (externalFlag){
+        Serial.println(referenceFreq);
+    }
+
     // Mix and filter the signal, a point at a time
     mixAndFilter();
 }
