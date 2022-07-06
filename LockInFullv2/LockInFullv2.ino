@@ -26,7 +26,7 @@ const uint8_t pinN = A11;
 unsigned long countPeriod_ms = 5000; // Count duration for reference frequency measurement
 const int maxPts = 15000;
 int nPts = 10000;
-const int cutoffFreq = 5.0; // for LP filtering, in Hz
+int cutoffFreq = 5.0; // for LP filtering, in Hz
 // **************************************************************
 
 // **************************************************************
@@ -124,6 +124,8 @@ void setup()
     samplingRate = atoi(com);
     com = strtok(NULL, ":");
     nPts = atoi(com);
+    com = strtok(NULL, ":");
+    cutoffFreq = atoi(com);
     com = strtok(NULL, "F");
     filterPole = atoi(com);
     if (!externalFlag)

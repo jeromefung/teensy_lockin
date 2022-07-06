@@ -103,7 +103,7 @@ class lockInDetection(tk.Frame):
         r += 1
 
         #low pass filter
-        filterCutoffLabel = tk.Label(self.parent, text="LP Cutoff Freq (default 5.0):")
+        filterCutoffLabel = tk.Label(self.parent, text="LP Cutoff Freq (default 5):")
         filterCutoffLabel.grid(row=r, column = 0, sticky=tk.W+tk.E)
         filterCutoffEntry = tk.Entry(self.parent)
         filterCutoffEntry.grid(row=r, column=1, sticky=tk.W+tk.E)
@@ -117,7 +117,7 @@ class lockInDetection(tk.Frame):
         r += 1
 
         #start button
-        startButton = tk.Button(self.parent, text="Start", command=lambda: self.startTeensy(frequencyEntry, sampleEntry, numPointsEntry, filterStageSelected, serPort))
+        startButton = tk.Button(self.parent, text="Start", command=lambda: self.startTeensy(frequencyEntry, sampleEntry, numPointsEntry, filterCutoffEntry, filterStageSelected, serPort))
         startButton.grid(row=r, columnspan=6, sticky=tk.W+tk.E)
         r += 1
 
@@ -152,7 +152,7 @@ class lockInDetection(tk.Frame):
         except:
             print("No serial port open")
 
-    def startTeensy(self, refFreqOrDur, sampRate, numPoints, filterStage, serPort):
+    def startTeensy(self, refFreqOrDur, sampRate, numPoints, filterCutoff, filterStage, serPort):
         '''
         Uploads script to arduino and processes the data recieved
         Returns True if successful and false if not
@@ -169,6 +169,10 @@ class lockInDetection(tk.Frame):
                 numPoints = int(numPoints.get())
             except:
                 numPoints = 10000
+            try:
+                filterCutoff = int(filterCutoff.get())
+            except:
+                filterCutoff = 5
             filterStage = filterStage.get()
             if self.refSelect.get() == 0:  # internal reference selected
                 try:
@@ -180,7 +184,7 @@ class lockInDetection(tk.Frame):
                     refFreqOrDur = int(refFreqOrDur.get())
                 except:
                     refFreqOrDur = 5000
-            stringToSend = str(self.refSelect.get()) + ":" + str(refFreqOrDur) + ":" + str(sampRate) + ":" + str(numPoints) + ":" + str(filterStage) + "F"
+            stringToSend = str(self.refSelect.get()) + ":" + str(refFreqOrDur) + ":" + str(sampRate) + ":" + str(numPoints) + ":" + str(filterCutoff) + ":" + str(filterStage) + "F"
             #send data
             try:
                 self.ser.write(str(stringToSend).encode('utf-8'))
