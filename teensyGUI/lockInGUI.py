@@ -158,6 +158,7 @@ class lockInDetection(tk.Frame):
         Returns True if successful and false if not
         '''
         try:
+            print() #for separation in output
             self.startSerial(serPort) #start the serial port
             self.ser.reset_output_buffer()
             self.ser.reset_input_buffer()
