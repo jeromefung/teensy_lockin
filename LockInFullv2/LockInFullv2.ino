@@ -144,7 +144,7 @@ void setup()
     delay(1000);
     measureLockIn();
     if (fastMode == 1){
-        delay(5000);
+        delay(2000);
     }
     else{
         delay(10000);

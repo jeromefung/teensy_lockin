@@ -1,9 +1,11 @@
 import tkinter as tk
 from tkinter import filedialog
 import serial
+import serial.tools.list_ports
 import pandas as pd
 import matplotlib.pyplot as plt
 import sys
+import os
 import time
 
 class IORedirector(object):
@@ -142,10 +144,14 @@ class lockInDetection(tk.Frame):
         #port = "COM" + port
         try:
             self.ser = serial.Serial(port, 38400, timeout=None, write_timeout=10)
-            self.ser.set_buffer_size(rx_size= 100000, tx_size=4096)
+            if os.name == 'nt':
+                # Implemented in Windows only
+                self.ser.set_buffer_size(rx_size= 100000, tx_size=4096)
+                
             print("Successful")
-        except:
+        except Exception as e:
             print("Could not connect to serial port, " + port)
+            print(e)
 
     def endSerial(self):
         '''Closes serial port'''
@@ -160,7 +166,6 @@ class lockInDetection(tk.Frame):
         Returns True if successful and false if not
         '''
         try:
-            print() #for separation in output
             self.startSerial(serPort) #start the serial port
             self.ser.reset_output_buffer()
             self.ser.reset_input_buffer()
@@ -204,8 +209,12 @@ class lockInDetection(tk.Frame):
         
     def processFastData(self, numPoints):
         try:
+
+            waitctr = 0
             while self.ser.in_waiting == 0:
-                pass
+                waitctr += 1
+
+            print(waitctr)
             
             #again this needs to be tested
             if self.refSelect.get() == 1:
@@ -225,8 +234,10 @@ class lockInDetection(tk.Frame):
                 if (time.time()-start > 30): #prevent infinite loop
                     break
             d = d.split(',')
-            print("Average Amplitude:", d[0], "Average Phase:", d[1])            
+            print("Average Amplitude:", d[0], "Average Phase:", d[1])
+            self.endSerial()
         except Exception as e:
+            print(waitctr)
             print("Fast Mode Failed")
             exc_type, exc_obj, exc_tb = sys.exc_info()
             print(e, exc_type, exc_tb.tb_lineno)
@@ -336,6 +347,9 @@ class lockInDetection(tk.Frame):
 
 
 def main():
+    port_list = list(serial.tools.list_ports.comports())
+    for port in port_list:
+        print(port)
     root = tk.Tk()
     frame = lockInDetection(root)
     frame.grid()
