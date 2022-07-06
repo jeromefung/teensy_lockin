@@ -6,6 +6,16 @@ import matplotlib.pyplot as plt
 import sys
 import time
 
+class IORedirector(object):
+    '''A general class for redirecting I/O to this Text widget.'''
+    def __init__(self,text_area):
+        self.text_area = text_area
+
+class StdoutRedirector(IORedirector):
+    '''A class for redirecting stdout to this Text widget.'''
+    def write(self,str):
+        self.text_area.insert(tk.END,str)
+
 class lockInDetection(tk.Frame):
     '''
     Frame object to be use in GUI for lock in detection with teensy microcontroller
@@ -105,6 +115,12 @@ class lockInDetection(tk.Frame):
         #save button
         saveButton = tk.Button(self.parent, text="Save Data", command=lambda: self.saveData())
         saveButton.grid(row=r, columnspan=6, sticky=tk.W+tk.E)
+        r += 1
+
+        #output
+        output = tk.Text(self.parent)
+        output.grid(row=r, columnspan=4, sticky=tk.W+tk.E)
+        sys.stdout = StdoutRedirector(output)
 
     def startSerial(self, serPort):
         '''Opens serial port'''
@@ -255,6 +271,7 @@ def main():
     frame = lockInDetection(root)
     frame.grid()
     root.mainloop()
+    sys.stdout = sys.__stdout__
 
 
 if __name__ == '__main__':
