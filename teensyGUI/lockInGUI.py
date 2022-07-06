@@ -54,40 +54,40 @@ class lockInDetection(tk.Frame):
         self.frequencyLabel = tk.Label(self.parent, text="Internal Reference Frequency:")
         def internal():
             self.frequencyLabel = tk.Label(self.parent, text="Internal Reference Frequency:")
-            self.frequencyLabel.grid(row=freqLabelRow, columnspan=6, sticky=tk.W+tk.E)
+            self.frequencyLabel.grid(row=freqLabelRow, columnspan=4, sticky=tk.W+tk.E)
         def external():
             self.frequencyLabel = tk.Label(self.parent, text="External Reference Frequency Count Duration (default 5000 ms):")
-            self.frequencyLabel.grid(row=freqLabelRow, columnspan=6, sticky=tk.W+tk.E)
+            self.frequencyLabel.grid(row=freqLabelRow, columnspan=4, sticky=tk.W+tk.E)
 
         #reference signal
         internalButton = tk.Radiobutton(self.parent, text="Internal Reference", variable=self.refSelect, value=0, command=lambda: internal())
         internalButton.select()
-        internalButton.grid(row=r, columnspan=6, sticky=tk.W+tk.E)
+        internalButton.grid(row=r, columnspan=4, sticky=tk.W+tk.E)
         r += 1
         externalButton = tk.Radiobutton(self.parent, text="External Reference", variable=self.refSelect, value=1, command=lambda: external())
         externalButton.deselect()
-        externalButton.grid(row=r, columnspan=6, sticky=tk.W+tk.E)
+        externalButton.grid(row=r, columnspan=4, sticky=tk.W+tk.E)
         r += 1
 
         #internal or external ref freq
-        self.frequencyLabel.grid(row=r, columnspan=6, sticky=tk.W+tk.E)
+        self.frequencyLabel.grid(row=r, columnspan=4, sticky=tk.W+tk.E)
         freqLabelRow = r
         r += 1
         frequencyEntry = tk.Entry(self.parent)
-        frequencyEntry.grid(row=r, columnspan=6, sticky=tk.W+tk.E)
+        frequencyEntry.grid(row=r, columnspan=4, sticky=tk.W+tk.E)
         r += 1
 
         #sampling rate
         sampleLabel = tk.Label(self.parent, text="Sampling Rate (default 10,000):") #maybe change to dropdown menu in the future
-        sampleLabel.grid(row=r, columnspan=6, sticky=tk.W+tk.E)
+        sampleLabel.grid(row=r, columnspan=4, sticky=tk.W+tk.E)
         r += 1
         sampleEntry = tk.Entry(self.parent)
-        sampleEntry.grid(row=r, columnspan=6, sticky=tk.W+tk.E)
+        sampleEntry.grid(row=r, columnspan=4, sticky=tk.W+tk.E)
         r += 1
 
         #number of data points
         numPointsLabel = tk.Label(self.parent, text="Number of Points to Measure (default 10,000):")
-        numPointsLabel.grid(row=r, columnspan=6, sticky=tk.W+tk.E)
+        numPointsLabel.grid(row=r, columnspan=4, sticky=tk.W+tk.E)
         r += 1
         numPointsEntry = tk.Entry(self.parent)
         numPointsEntry.grid(row = r, columnspan = 6, sticky=tk.W+tk.E)
@@ -117,13 +117,15 @@ class lockInDetection(tk.Frame):
         r += 1
 
         #start button
-        startButton = tk.Button(self.parent, text="Start", command=lambda: self.startTeensy(frequencyEntry, sampleEntry, numPointsEntry, filterCutoffEntry, filterStageSelected, serPort))
-        startButton.grid(row=r, columnspan=6, sticky=tk.W+tk.E)
+        startButton = tk.Button(self.parent, text="Run", command=lambda: self.startTeensy(frequencyEntry, sampleEntry, numPointsEntry, filterCutoffEntry, filterStageSelected, 0, serPort))
+        startButton.grid(row=r, column=0, columnspan=2, sticky=tk.W+tk.E)
+        startButtonFast = tk.Button(self.parent, text="Run Fast Mode", command=lambda: self.startTeensy(frequencyEntry, sampleEntry, numPointsEntry, filterCutoffEntry, filterStageSelected, 1, serPort))
+        startButtonFast.grid(row=r, column=2, columnspan=2, sticky=tk.W+tk.E)
         r += 1
 
         #save button
         saveButton = tk.Button(self.parent, text="Save Data", command=lambda: self.saveData())
-        saveButton.grid(row=r, columnspan=6, sticky=tk.W+tk.E)
+        saveButton.grid(row=r, columnspan=4, sticky=tk.W+tk.E)
         r += 1
 
         #output
@@ -152,7 +154,7 @@ class lockInDetection(tk.Frame):
         except:
             print("No serial port open")
 
-    def startTeensy(self, refFreqOrDur, sampRate, numPoints, filterCutoff, filterStage, serPort):
+    def startTeensy(self, refFreqOrDur, sampRate, numPoints, filterCutoff, filterStage, fastMode, serPort):
         '''
         Uploads script to arduino and processes the data recieved
         Returns True if successful and false if not
@@ -185,17 +187,43 @@ class lockInDetection(tk.Frame):
                     refFreqOrDur = int(refFreqOrDur.get())
                 except:
                     refFreqOrDur = 5000
-            stringToSend = str(self.refSelect.get()) + ":" + str(refFreqOrDur) + ":" + str(sampRate) + ":" + str(numPoints) + ":" + str(filterCutoff) + ":" + str(filterStage) + "F"
+            stringToSend = str(self.refSelect.get()) + ":" + str(refFreqOrDur) + ":" + str(sampRate) + ":" + str(numPoints) + ":" + str(filterCutoff) + ":" + str(filterStage) + ":" + str(fastMode) + "F"
             #send data
             try:
                 self.ser.write(str(stringToSend).encode('utf-8'))
             except:
                 print("writing timed out")
-            self.processData(numPoints)
+            if fastMode == 0:
+                self.processData(numPoints)
+            else:
+                self.processFastData(numPoints)
             return True
         except:
             print("Failed in startTeensy")
             return False
+        
+    def processFastData(self, numPoints):
+        try:
+            while self.ser.in_waiting == 0:
+                pass
+            
+            #again this needs to be tested
+            if self.refSelect.get() == 1:
+                externalRefFreq = self.ser.readline()
+                print("Measured External Reference Frequency:", externalRefFreq)
+            
+            d = ''
+            while True:
+                temp = self.ser.read()
+                temp = str(temp)[2:-1]
+                if (temp != 'E'):
+                    d = d + temp
+                else:
+                    break
+            d = d.split(',')
+            print("Average Amplitude:", d[0], "Average Phase:", d[1])            
+        except:
+            print("Fast Mode Failed")
 
     def processData(self, numPoints):
         '''

@@ -38,6 +38,7 @@ const int analogOutPin = A21;
 long sinFreq;
 double referenceFreq;
 int filterPole;
+int fastMode;
 
 short mySignal[maxPts]; // the raw digitized signal of interest
 ADC *adc = new ADC(); // create ADC object
@@ -126,8 +127,10 @@ void setup()
     nPts = atoi(com);
     com = strtok(NULL, ":");
     cutoffFreq = atoi(com);
-    com = strtok(NULL, "F");
+    com = strtok(NULL, ":");
     filterPole = atoi(com);
+    com = strtok(NULL, "F");
+    fastMode = atoi(com);
     if (!externalFlag)
     {
         referenceFreq = (double)sinFreq;
@@ -273,7 +276,12 @@ void measureLockIn()
     }
 
     // Mix and filter the signal, a point at a time
-    mixAndFilter();
+    if (fastMode == 1){
+        mixAndFilterFast();
+    }
+    else{
+        mixAndFilter();
+    }
 }
 
 // Start digitizing signal on rising edge of external reference signal
@@ -321,6 +329,80 @@ void calcFilterCoeffs2p()
     b[0] = 0; // for simplicity
     b[1] = 2 * filterX;
     b[2] = -pow(filterX, 2);
+}
+
+void mixAndFilterFast(){
+    //n_pts already exists in variable nPts
+    //do not need y since just print to serial
+    //n_coeffs already exists in numCoeffs
+    //x is signal, a is a, b is b
+    
+    //make a register for i and qthat is the number of coefficients long
+    //need to preload with zeros
+
+    //need to make variables to store averages in
+    double rAvg = 0.0;
+    double pAvg = 0.0;
+
+    double yregX[numCoeffs];
+    double yregY[numCoeffs];
+    for (int i = 0; i < numCoeffs; i++){
+        yregX[i] = 0.0;
+        yregY[i] = 0.0;
+    }
+
+    //create sum variables and sine and cosine terms
+    double ynX;
+    double ynY;
+    //need to loop over the number of points
+    for (int n = numCoeffs - 1; n < nPts; n++){
+        //need to initialize the sums
+        ynX = 0;
+        ynY = 0;
+        double sinTerm;
+        double cosTerm;
+        //now loop over coefficients - need to multiply the signal by sine and cosine
+        //need to figure out padding - from python - pad input circularly (e.g., x[-1]), and assume output y is initially 0.
+        //what if start from n = 1 (or more generally numCoeffs - 1), output is already initialized to be 0
+        for (int coeffCtr = 0; coeffCtr < numCoeffs; coeffCtr++){
+            sinTerm = sin(2 * PI * referenceFreq * ((n - coeffCtr) / ((double)samplingRate)));
+            cosTerm = cos(2 * PI * referenceFreq * ((n - coeffCtr) / ((double)samplingRate)));
+            ynX = ynX + a[coeffCtr] * (double)mySignal[n - coeffCtr] * sinTerm + b[coeffCtr] * yregX[coeffCtr];
+            ynY = ynY + a[coeffCtr] * (double)mySignal[n - coeffCtr] * cosTerm + b[coeffCtr] * yregY[coeffCtr];
+        }
+
+        //print output
+        double R;
+        double phi;
+        R = sqrt(ynX * ynX + ynY * ynY);
+        phi = atan2(ynY, ynX);
+
+        rAvg = rAvg + R; //need to figure out a way to not add the first few points
+        pAvg = pAvg + phi;
+
+        //update registers by shifting yreg[n] to yreg[n+1]
+        //this will need to be changed if we ever use more than 2 coeffs
+        for (int coeffCtr = numCoeffs - 1; coeffCtr > 0; coeffCtr--){
+            if (coeffCtr == 1){
+                yregX[coeffCtr] = ynX;
+                yregY[coeffCtr] = ynY;
+            }
+            else{
+                yregX[coeffCtr] = yregX[coeffCtr - 1];
+                yregY[coeffCtr] = yregY[coeffCtr - 1];
+            }
+        }
+        delay(2);
+    }
+
+    rAvg = rAvg / ((double)nPts);
+    pAvg = pAvg / ((double)nPts);
+
+    Serial.print(rAvg);
+    Serial.print(", ");
+    Serial.print(pAvg);
+    Serial.print("E");
+
 }
 
 void mixAndFilter()
