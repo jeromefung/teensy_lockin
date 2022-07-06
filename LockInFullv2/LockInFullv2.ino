@@ -143,7 +143,12 @@ void setup()
     }
     delay(1000);
     measureLockIn();
-    delay(10000);
+    if (fastMode == 1){
+        delay(5000);
+    }
+    else{
+        delay(10000);
+    }
     WRITE_RESTART(0x5FA0004);
 }
 
