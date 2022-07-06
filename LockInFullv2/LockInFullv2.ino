@@ -26,7 +26,7 @@ const uint8_t pinN = A11;
 unsigned long countPeriod_ms = 5000; // Count duration for reference frequency measurement
 const int maxPts = 15000;
 int nPts = 10000;
-int cutoffFreq = 5.0; // for LP filtering, in Hz
+int cutoffFreq; // = 5.0; // for LP filtering, in Hz
 // **************************************************************
 
 // **************************************************************
@@ -56,7 +56,7 @@ IntervalTimer myTimer;
 DMAChannel dma1(true);
 
 // LP filter coefficients
-const int numCoeffs = 3;
+const int numCoeffs = 5;
 double a[numCoeffs];
 double b[numCoeffs];
 // **************************************************************
@@ -131,6 +131,7 @@ void setup()
     filterPole = atoi(com);
     com = strtok(NULL, "F");
     fastMode = atoi(com);
+
     if (!externalFlag)
     {
         referenceFreq = (double)sinFreq;
@@ -262,12 +263,12 @@ void measureLockIn()
         calcFilterCoeffs2p();
     }
     else if (filterPole == 3){
-        // for 3rd stage - just use 2nd temporarily
-        calcFilterCoeffs2p();
+        // for 3rd stage - 
+        calcFilterCoeffs3p();
     }
     else{
-        // for 4th stage - just use 2nd temporarily
-        calcFilterCoeffs2p();
+        // for 4th stage - 
+        calcFilterCoeffs4p();
     }
 
     // Display measured external reference right before mixing and filtering
@@ -330,6 +331,7 @@ void calcFilterCoeffs2p()
     b[1] = 2 * filterX;
     b[2] = -pow(filterX, 2);
 }
+
 
 void mixAndFilterFast(){
     //n_pts already exists in variable nPts
@@ -404,6 +406,36 @@ void mixAndFilterFast(){
     Serial.print("E");
 
 }
+
+
+void calcFilterCoeffs3p()
+{
+    double filterX = exp(-2 * PI * cutoffFreq / samplingRate);  
+    a[0] = pow(1 - filterX, 3);
+    a[1] = 0;
+    a[2] = 0;
+    a[3] = 0;
+    b[0] = 0;
+    b[1] = 3 * filterX;
+    b[2] = -3 * pow(filterX, 2);
+    b[3] = pow(filterX, 3);
+}
+
+void calcFilterCoeffs4p()
+{
+    double filterX = exp(-2 * PI * cutoffFreq / samplingRate);  
+    a[0] = pow(1 - filterX, 4);
+    a[1] = 0;
+    a[2] = 0;
+    a[3] = 0;
+    a[4] = 0;
+    b[0] = 0;
+    b[1] = 4 * filterX;
+    b[2] = -6 * pow(filterX, 2);
+    b[3] = 4 * pow(filterX, 3);
+    b[4] = -pow(filterX, 4);
+}
+
 
 void mixAndFilter()
 {   
