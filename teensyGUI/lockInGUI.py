@@ -209,8 +209,9 @@ class lockInDetection(tk.Frame):
             
             #again this needs to be tested
             if self.refSelect.get() == 1:
-                externalRefFreq = self.ser.readline()
-                print("Measured External Reference Frequency:", externalRefFreq)
+                externalRefFreq = str(self.ser.readline().strip())
+                externalRefFreq = externalRefFreq.strip("b'")
+                print("Measured External Reference Frequency [Hz]:", externalRefFreq)
             
             d = ''
             while True:
@@ -237,8 +238,9 @@ class lockInDetection(tk.Frame):
             
             #unsure if this will work for getting external ref freq - needs to be tested
             if self.refSelect.get() == 1:
-                externalRefFreq = self.ser.readline()
-                print("Measured External Reference Frequency:", externalRefFreq)
+                externalRefFreq = str(self.ser.readline().strip())
+                externalRefFreq = externalRefFreq.strip("b'")
+                print("Measured External Reference Frequency [Hz]:", externalRefFreq)
             
             d = ''
             if numPoints > 100:
