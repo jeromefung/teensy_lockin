@@ -99,6 +99,7 @@ class lockInDetection(tk.Frame):
         self.percent = tk.IntVar()
         percentBar = tk.Scale(self.parent, variable=self.percent, from_ = 0, to = 100, orient = tk.HORIZONTAL)
         percentBar.grid(row = r, column=1, sticky=tk.W+tk.E)
+        percentBar.set(75)
         r += 1
 
         #low pass filter
