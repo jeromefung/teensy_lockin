@@ -117,15 +117,10 @@ class lockInDetection(tk.Frame):
         r += 1
 
         #start button
-<<<<<<< HEAD
         startButton = tk.Button(self.parent, text="Run", command=lambda: self.startTeensy(frequencyEntry, sampleEntry, numPointsEntry, filterCutoffEntry, filterStageSelected, 0, serPort))
         startButton.grid(row=r, column=0, columnspan=2, sticky=tk.W+tk.E)
         startButtonFast = tk.Button(self.parent, text="Run Fast Mode", command=lambda: self.startTeensy(frequencyEntry, sampleEntry, numPointsEntry, filterCutoffEntry, filterStageSelected, 1, serPort))
         startButtonFast.grid(row=r, column=2, columnspan=2, sticky=tk.W+tk.E)
-=======
-        startButton = tk.Button(self.parent, text="Start", command=lambda: self.startTeensy(frequencyEntry, sampleEntry, numPointsEntry, filterStageSelected, filterCutoffEntry, serPort))
-        startButton.grid(row=r, columnspan=6, sticky=tk.W+tk.E)
->>>>>>> 04600c8 (Fixed transmission of cutoff frequency from Python GUI. Implemented 3- and 4-pole filtering.)
         r += 1
 
         #save button
