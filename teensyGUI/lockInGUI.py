@@ -263,15 +263,18 @@ class lockInDetection(tk.Frame):
             return False
 
     def displayAverages(self):
-        amplitudeAverage = 0
-        phaseAverage = 0
-        startIdx = int((self.percent.get() / 100) * len(self.DataDf["R"]))
-        for amp in self.DataDf["R"][startIdx:]:
-            amplitudeAverage += (2*amp*3.3/4096)
-        print("Average Measured Amplitude:", amplitudeAverage/len(self.DataDf["R"]))
-        for phase in self.DataDf["Phi"][startIdx:]:
-            phaseAverage += phase
-        print("Average Measured Phase:", phaseAverage/len(self.DataDf["Phi"]))
+        try:
+            amplitudeAverage = 0
+            phaseAverage = 0
+            startIdx = int((self.percent.get() / 100) * len(self.DataDf["R"]))
+            for amp in self.DataDf["R"][startIdx:]:
+                amplitudeAverage += (2*amp*3.3/4096)
+            print("Average Measured Amplitude:", amplitudeAverage/len(self.DataDf["R"]))
+            for phase in self.DataDf["Phi"][startIdx:]:
+                phaseAverage += phase
+            print("Average Measured Phase:", phaseAverage/len(self.DataDf["Phi"]))
+        except:
+            print("Error in calculating Averages")
     
     def saveData(self):
         files = [('CSV (Comma Delimited)', '*.csv'),
