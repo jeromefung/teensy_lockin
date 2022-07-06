@@ -93,6 +93,14 @@ class lockInDetection(tk.Frame):
         numPointsEntry.grid(row = r, columnspan = 6, sticky=tk.W+tk.E)
         r += 1
 
+        #scale bar for number of points to average
+        percentLabel = tk.Label(self.parent, text="Percent of Points used to Average:")
+        percentLabel.grid(row = r, column=0, sticky=tk.W+tk.E)
+        self.percent = tk.IntVar()
+        percentBar = tk.Scale(self.parent, variable=self.percent, from_ = 0, to = 100, orient = tk.HORIZONTAL)
+        percentBar.grid(row = r, column=1, sticky=tk.W+tk.E)
+        r += 1
+
         #low pass filter
         filterCutoffLabel = tk.Label(self.parent, text="LP Cutoff Freq (default 5.0):")
         filterCutoffLabel.grid(row=r, column = 0, sticky=tk.W+tk.E)
@@ -244,6 +252,7 @@ class lockInDetection(tk.Frame):
             print(dataDf.head())
             self.DataDf = dataDf
             self.endSerial()
+            self.displayAverages()
             return True
         except Exception as e:
             print("Failed in processData")
@@ -252,6 +261,16 @@ class lockInDetection(tk.Frame):
             print(dataDf.head())
             return False
 
+    def displayAverages(self):
+        amplitudeAverage = 0
+        phaseAverage = 0
+        startIdx = int((self.percent.get() / 100) * len(self.DataDf["R"]))
+        for amp in self.DataDf["R"][startIdx:]:
+            amplitudeAverage += (2*amp*3.3/4096)
+        print("Average Measured Amplitude:", amplitudeAverage/len(self.DataDf["R"]))
+        for phase in self.DataDf["Phi"][startIdx:]:
+            phaseAverage += phase
+        print("Average Measured Phase:", phaseAverage/len(self.DataDf["Phi"]))
     
     def saveData(self):
         files = [('CSV (Comma Delimited)', '*.csv'),
