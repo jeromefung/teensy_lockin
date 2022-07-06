@@ -226,8 +226,10 @@ class lockInDetection(tk.Frame):
                     break
             d = d.split(',')
             print("Average Amplitude:", d[0], "Average Phase:", d[1])            
-        except:
+        except Exception as e:
             print("Fast Mode Failed")
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            print(e, exc_type, exc_tb.tb_lineno)
 
     def processData(self, numPoints):
         '''
