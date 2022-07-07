@@ -147,7 +147,8 @@ void setup()
         delay(2000);
     }
     else{
-        delay(10000);
+        delay((nPts / 2) + 2000); //unsure if this will be too fast at low nPts - ideally have function that converts nPts to time
+        // - need measurement of how fast teensy writes compared to how fast pc reads
     }
     WRITE_RESTART(0x5FA0004);
 }
