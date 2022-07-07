@@ -143,7 +143,7 @@ class lockInDetection(tk.Frame):
             print("Serial Port Not Specified")
         #port = "COM" + port
         try:
-            self.ser = serial.Serial(port, 38400, timeout=None, write_timeout=10)
+            self.ser = serial.Serial(port, 115200, timeout=None, write_timeout=10)
             if os.name == 'nt':
                 # Implemented in Windows only
                 self.ser.set_buffer_size(rx_size= 100000, tx_size=4096)

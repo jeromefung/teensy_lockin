@@ -65,7 +65,7 @@ void setup()
 {
     // put your setup code here, to run once:
     Serial.begin(38400);
-    delay(500);
+    //delay(500);
     pinMode(pinP, INPUT);
     pinMode(pinN, INPUT);
 
@@ -76,7 +76,7 @@ void setup()
     adc->adc0->setConversionSpeed(ADC_CONVERSION_SPEED::HIGH_SPEED); // changes ADC clock
     adc->adc0->setSamplingSpeed(ADC_SAMPLING_SPEED::LOW_SPEED);      // change the sampling speed
     validDiff = adc->adc1->checkDifferentialPins(pinP, pinN);
-    delay(1000);
+    //delay(1000);
 
     // test block
     //Serial.println(countPeriod_ms);
@@ -508,6 +508,6 @@ void mixAndFilter()
                 yregY[coeffCtr] = yregY[coeffCtr - 1];
             }
         }
-        delay(2);
+        delayMicroseconds(100);
     }
 }
