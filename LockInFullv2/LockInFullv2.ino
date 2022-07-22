@@ -24,7 +24,7 @@ const uint8_t pinN = A11;
 // **************************************************************
 // Global variables -- user set
 unsigned long countPeriod_ms = 5000; // Count duration for reference frequency measurement
-const int maxPts = 15000;
+const int maxPts = 50000;
 int nPts = 10000;
 int cutoffFreq; // = 5.0; // for LP filtering, in Hz
 // **************************************************************
@@ -134,7 +134,7 @@ void setup()
 
     if (!externalFlag)
     {
-        referenceFreq = (double)sinFreq;
+        //referenceFreq = (double)sinFreq;
         generateReferenceWave();
     }
     measPeriod_us = 1000000 / samplingRate;
@@ -192,6 +192,10 @@ void generateReferenceWave()
 
     // Calculate period between outputs
     uint32_t mod = F_BUS / (sinFreq * LUT_SIZE);
+
+    // Calculate actual frequency used
+    referenceFreq = F_BUS / double(mod * LUT_SIZE) ;
+    
     delay(500);
     // Serial.println(mod);
 
@@ -260,6 +264,12 @@ void measureLockIn()
     }
     // Now disable timer
     myTimer.end();
+
+    // Calculate the actual frequency used 
+    if (!externalFlag)
+    {
+        
+    }
 
     // Set up filter coefficients
     if (filterPole == 1){

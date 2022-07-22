@@ -34,6 +34,10 @@ class lockInDetection(tk.Frame):
         self.DataDf = pd.DataFrame()
         self.initialize()
 
+        # Store some info about the Teensy here
+        self.teensy_clock_freq = 120e6 # default 120 MHz
+        self.sine_lut_length = 300
+
     def initialize(self):
         '''Initialize the frame parameters and create their widgets'''
         self.parent.title("Lock in Detector")
@@ -185,6 +189,11 @@ class lockInDetection(tk.Frame):
             if self.refSelect.get() == 0:  # internal reference selected
                 try:
                     refFreqOrDur = int(refFreqOrDur.get())
+                    # if internal ref, calculate and display actual frequency
+                    teensy_clk_periods = int(self.teensy_clock_freq / (refFreqOrDur * self.sine_lut_length)) # corresponds to mod in Teensy code
+                    actual_freq = self.teensy_clock_freq / (teensy_clk_periods
+                                                            * self.sine_lut_length)
+                    print('Actual frequency: ', actual_freq, ' Hz')
                 except:
                     return False
             else:
@@ -198,6 +207,7 @@ class lockInDetection(tk.Frame):
                 self.ser.write(str(stringToSend).encode('utf-8'))
             except:
                 print("writing timed out")
+            
             if fastMode == 0:
                 self.processData(numPoints)
             else:
