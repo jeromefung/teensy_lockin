@@ -51,12 +51,12 @@ class lockInDetection(tk.Frame):
         serialFrame = self.createSerialPortWidgets(tk.Frame(self.parent))
         aquisitionFrame = self.createAquisitionWidgets(tk.Frame(self.parent))
         filterFrame = self.createFilteringWidgets(tk.Frame(self.parent))
-        #postFrame = self.createPostWidgets(tk.Frame(self.parent))
+        postFrame = self.createPostWidgets(tk.Frame(self.parent))
         #outFrame = self.createOutWidgets(tk.Frame(self.parent))
         serialFrame.grid(row=2, column = 1, padx = 10)
         aquisitionFrame.grid(row=2, column = 2, padx = 10)
         filterFrame.grid(row=2, column = 3, padx = 10)
-        #postFrame.grid(row=2, column = 4, padx = 10)
+        postFrame.grid(row=2, column = 4, padx = 10)
         #outFrame.grid(row=3, column = 1, columnspan = 4, padx = 10)
     
     def createTitleWidgets(self):
@@ -72,6 +72,10 @@ class lockInDetection(tk.Frame):
         filterTitle = tk.Label(filterFrame, text = "Filtering Settings", font = ('Arial', 25))
         filterTitle.grid(row = 1, column = 1)
         filterFrame.grid(row=1, column=3, padx=10)
+        postFrame = tk.Frame(self.parent)
+        postTitle = tk.Label(postFrame, text="Post Processing Settings", font = ('Arial', 25))
+        postTitle.grid(row=1, column=1)
+        postFrame.grid(row=1, column=4, padx=10)
 
     def createSerialPortWidgets(self, frame):
         #serial port
@@ -183,6 +187,23 @@ class lockInDetection(tk.Frame):
         return frame
     
     def createPostWidgets(self, frame):
+        self.mode = 0
+        normalButton = tk.Radiobutton(frame, text="Normal Mode", variable=self.mode, value=0)
+        normalButton.select()
+        normalButton.grid(row=1, column = 1)
+        fastButton = tk.Radiobutton(frame, text="Fast Mode      ", variable=self.mode, value=1)
+        fastButton.deselect()
+        fastButton.grid(row=2, column = 1)
+        #scale bar for number of points to average
+        percentLabel = tk.Label(frame, text="Percent of Points used to Average:")
+        percentLabel.grid(row = 1, column=2, columnspan=2, padx = 20)
+        self.percent = tk.IntVar()
+        percentBar = tk.Scale(frame, variable=self.percent, from_ = 0, to = 100, orient = tk.HORIZONTAL)
+        percentBar.grid(row = 2, column=2, columnspan=2)
+        percentBar.set(75)
+        return frame
+
+    def createOutWidgets(self, frame):
         r=1
         #scale bar for number of points to average
         percentLabel = tk.Label(frame, text="Percent of Points used to Average:")
