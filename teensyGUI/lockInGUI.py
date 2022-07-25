@@ -47,30 +47,38 @@ class lockInDetection(tk.Frame):
 
     def createWidgets(self):
         '''Creates all the widgets needed for the GUI'''
+        self.createSerialPortWidgets(tk.Frame(self.parent))
+        self.createAquisitionWidgets(tk.Frame(self.parent))
+        self.createFilteringWidgets(tk.Frame(self.parent))
+        self.createPostWidgets(tk.Frame(self.parent))
+
+    def createSerialPortWidgets(self, frame):
+        r=1
+        #serial port
+        serPortLabel = tk.Label(frame, text="Serial Port:")
+        serPortLabel.grid(row=r, column=0, columnspan=1, sticky=tk.W+tk.E)
+        serPort = tk.Entry(frame)
+        serPort.grid(row=1, column=1, sticky=tk.W+tk.E)
+        frame.grid(row=1, column = 1, sticky=tk.W+tk.E)
+    
+    def createAquisitionWidgets(self, frame):
         r = 1
 
-        #serial port
-        serPortLabel = tk.Label(self.parent, text="Serial Port:")
-        serPortLabel.grid(row=r, column=0, columnspan=1, sticky=tk.W+tk.E)
-        serPort = tk.Entry(self.parent)
-        serPort.grid(row=r, column=1, sticky=tk.W+tk.E)
-        r += 1
-
         #change options based off reference mode
-        self.frequencyLabel = tk.Label(self.parent, text="Internal Reference Frequency:")
+        self.frequencyLabel = tk.Label(frame, text="Internal Reference Frequency:")
         def internal():
-            self.frequencyLabel = tk.Label(self.parent, text="Internal Reference Frequency:")
+            self.frequencyLabel = tk.Label(frame, text="Internal Reference Frequency:")
             self.frequencyLabel.grid(row=freqLabelRow, columnspan=4, sticky=tk.W+tk.E)
         def external():
-            self.frequencyLabel = tk.Label(self.parent, text="External Reference Frequency Count Duration (default 5000 ms):")
+            self.frequencyLabel = tk.Label(frame, text="External Reference Frequency Count Duration (default 5000 ms):")
             self.frequencyLabel.grid(row=freqLabelRow, columnspan=4, sticky=tk.W+tk.E)
 
         #reference signal
-        internalButton = tk.Radiobutton(self.parent, text="Internal Reference", variable=self.refSelect, value=0, command=lambda: internal())
+        internalButton = tk.Radiobutton(frame, text="Internal Reference", variable=self.refSelect, value=0, command=lambda: internal())
         internalButton.select()
         internalButton.grid(row=r, columnspan=4, sticky=tk.W+tk.E)
         r += 1
-        externalButton = tk.Radiobutton(self.parent, text="External Reference", variable=self.refSelect, value=1, command=lambda: external())
+        externalButton = tk.Radiobutton(frame, text="External Reference", variable=self.refSelect, value=1, command=lambda: external())
         externalButton.deselect()
         externalButton.grid(row=r, columnspan=4, sticky=tk.W+tk.E)
         r += 1
@@ -79,65 +87,71 @@ class lockInDetection(tk.Frame):
         self.frequencyLabel.grid(row=r, columnspan=4, sticky=tk.W+tk.E)
         freqLabelRow = r
         r += 1
-        frequencyEntry = tk.Entry(self.parent)
+        frequencyEntry = tk.Entry(frame)
         frequencyEntry.grid(row=r, columnspan=4, sticky=tk.W+tk.E)
         r += 1
 
         #sampling rate
-        sampleLabel = tk.Label(self.parent, text="Sampling Rate (default 10,000):") #maybe change to dropdown menu in the future
+        sampleLabel = tk.Label(frame, text="Sampling Rate (default 10,000):") #maybe change to dropdown menu in the future
         sampleLabel.grid(row=r, columnspan=4, sticky=tk.W+tk.E)
         r += 1
-        sampleEntry = tk.Entry(self.parent)
+        sampleEntry = tk.Entry(frame)
         sampleEntry.grid(row=r, columnspan=4, sticky=tk.W+tk.E)
         r += 1
 
         #number of data points
-        numPointsLabel = tk.Label(self.parent, text="Number of Points to Measure (default 10,000):")
+        numPointsLabel = tk.Label(frame, text="Number of Points to Measure (default 10,000):")
         numPointsLabel.grid(row=r, columnspan=4, sticky=tk.W+tk.E)
         r += 1
-        numPointsEntry = tk.Entry(self.parent)
+        numPointsEntry = tk.Entry(frame)
         numPointsEntry.grid(row = r, columnspan = 6, sticky=tk.W+tk.E)
         r += 1
+        frame.grid(row=1, column = 2, sticky=tk.W+tk.E)
 
-        #scale bar for number of points to average
-        percentLabel = tk.Label(self.parent, text="Percent of Points used to Average:")
-        percentLabel.grid(row = r, column=0, sticky=tk.W+tk.E)
-        self.percent = tk.IntVar()
-        percentBar = tk.Scale(self.parent, variable=self.percent, from_ = 0, to = 100, orient = tk.HORIZONTAL)
-        percentBar.grid(row = r, column=1, sticky=tk.W+tk.E)
-        percentBar.set(75)
-        r += 1
-
+    def createFilteringWidgets(self, frame):
+        r=1
         #low pass filter
-        filterCutoffLabel = tk.Label(self.parent, text="LP Cutoff Freq (default 5):")
+        filterCutoffLabel = tk.Label(frame, text="LP Cutoff Freq (default 5):")
         filterCutoffLabel.grid(row=r, column = 0, sticky=tk.W+tk.E)
-        filterCutoffEntry = tk.Entry(self.parent)
+        filterCutoffEntry = tk.Entry(frame)
         filterCutoffEntry.grid(row=r, column=1, sticky=tk.W+tk.E)
-        filterStageLabel = tk.Label(self.parent, text="Filter Order:")
+        filterStageLabel = tk.Label(frame, text="Filter Order:")
         filterStageLabel.grid(row = r, column = 2, sticky=tk.W+tk.E)
         filterStageOptions = [1, 2, 3, 4]
         filterStageSelected = tk.IntVar()
         filterStageSelected.set(1)
-        filterStageMenu = tk.OptionMenu(self.parent, filterStageSelected, *filterStageOptions)
+        filterStageMenu = tk.OptionMenu(frame, filterStageSelected, *filterStageOptions)
         filterStageMenu.grid(row=r, column = 3, sticky=tk.W+tk.E)
+        frame.grid(row=1, column = 3, sticky=tk.W+tk.E)
+    
+    def createPostWidgets(self, frame):
+        r=1
+        #scale bar for number of points to average
+        percentLabel = tk.Label(frame, text="Percent of Points used to Average:")
+        percentLabel.grid(row = r, column=0, sticky=tk.W+tk.E)
+        self.percent = tk.IntVar()
+        percentBar = tk.Scale(frame, variable=self.percent, from_ = 0, to = 100, orient = tk.HORIZONTAL)
+        percentBar.grid(row = r, column=1, sticky=tk.W+tk.E)
+        percentBar.set(75)
         r += 1
 
         #start button
-        startButton = tk.Button(self.parent, text="Run", command=lambda: self.startTeensy(frequencyEntry, sampleEntry, numPointsEntry, filterCutoffEntry, filterStageSelected, 0, serPort))
+        startButton = tk.Button(frame, text="Run", command=lambda: self.startTeensy(frequencyEntry, sampleEntry, numPointsEntry, filterCutoffEntry, filterStageSelected, 0, serPort))
         startButton.grid(row=r, column=0, columnspan=2, sticky=tk.W+tk.E)
-        startButtonFast = tk.Button(self.parent, text="Run Fast Mode", command=lambda: self.startTeensy(frequencyEntry, sampleEntry, numPointsEntry, filterCutoffEntry, filterStageSelected, 1, serPort))
+        startButtonFast = tk.Button(frame, text="Run Fast Mode", command=lambda: self.startTeensy(frequencyEntry, sampleEntry, numPointsEntry, filterCutoffEntry, filterStageSelected, 1, serPort))
         startButtonFast.grid(row=r, column=2, columnspan=2, sticky=tk.W+tk.E)
         r += 1
 
         #save button
-        saveButton = tk.Button(self.parent, text="Save Data", command=lambda: self.saveData())
+        saveButton = tk.Button(frame, text="Save Data", command=lambda: self.saveData())
         saveButton.grid(row=r, columnspan=4, sticky=tk.W+tk.E)
         r += 1
 
         #output
-        output = tk.Text(self.parent)
+        output = tk.Text(frame)
         output.grid(row=r, columnspan=4, sticky=tk.W+tk.E)
         sys.stdout = StdoutRedirector(output)
+        frame.grid(row=1, column = 4, sticky=tk.W+tk.E)
 
     def startSerial(self, serPort):
         '''Opens serial port'''
