@@ -173,11 +173,11 @@ class lockInDetection(tk.Frame):
             try:
                 val = int(val)
                 self.cutoff = val
-                filterCutoffLabel.config(text="LP Cutoff Freq: " + str(self.cutoff))
+                filterCutoffLabel.config(text="Low Pass Cutoff Freq: " + str(self.cutoff))
             except:
                 pass
         self.cutoff = 5
-        filterCutoffLabel = tk.Label(frame, text="LP Cutoff Freq: " + str(self.cutoff))
+        filterCutoffLabel = tk.Label(frame, text="Low Pass Cutoff Freq: " + str(self.cutoff))
         filterCutoffLabel.grid(row=r, column = 1, columnspan=4)
         r+=1
         self.filterCutoffEntry = tk.Entry(frame)
