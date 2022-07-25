@@ -81,8 +81,8 @@ class lockInDetection(tk.Frame):
         #serial port
         serPortLabel = tk.Label(frame, text="Serial Port:")
         serPortLabel.grid(row=2, column=0)
-        serPort = tk.Entry(frame)
-        serPort.grid(row=2, column=1)
+        self.serPort = tk.Entry(frame)
+        self.serPort.grid(row=2, column=1)
         return frame
     
     def createAquisitionWidgets(self, frame):
@@ -110,7 +110,6 @@ class lockInDetection(tk.Frame):
         def updateRef(val):
             try:
                 val = int(val)
-                self.freqDurVal = val
                 if self.refSelect.get() == 0:
                     internal(val)
                 else:
@@ -145,6 +144,8 @@ class lockInDetection(tk.Frame):
         def updateNumPoints(val):
             try:
                 val = int(val)
+                if val > 15000:
+                    val = 15000
                 self.numPoints = val
                 numPointsLabel.config(text="Number of Points to Measure: " + str(self.numPoints))
             except:
@@ -180,9 +181,9 @@ class lockInDetection(tk.Frame):
         filterStageLabel = tk.Label(frame, text="Filter Order:")
         filterStageLabel.grid(row = r, column = 2, sticky=tk.W+tk.E)
         filterStageOptions = [1, 2, 3, 4]
-        filterStageSelected = tk.IntVar()
-        filterStageSelected.set(1)
-        filterStageMenu = tk.OptionMenu(frame, filterStageSelected, *filterStageOptions)
+        self.filterStageSelected = tk.IntVar()
+        self.filterStageSelected.set(1)
+        filterStageMenu = tk.OptionMenu(frame, self.filterStageSelected, *filterStageOptions)
         filterStageMenu.grid(row=r, column = 3, sticky=tk.W+tk.E)
         return frame
     
@@ -205,21 +206,9 @@ class lockInDetection(tk.Frame):
 
     def createOutWidgets(self, frame):
         r=1
-        #scale bar for number of points to average
-        percentLabel = tk.Label(frame, text="Percent of Points used to Average:")
-        percentLabel.grid(row = r, column=0, sticky=tk.W+tk.E)
-        self.percent = tk.IntVar()
-        percentBar = tk.Scale(frame, variable=self.percent, from_ = 0, to = 100, orient = tk.HORIZONTAL)
-        percentBar.grid(row = r, column=1, sticky=tk.W+tk.E)
-        percentBar.set(75)
-        r += 1
-
         #start button
-        startButton = tk.Button(frame, text="Run", command=lambda: self.startTeensy(frequencyEntry, sampleEntry, numPointsEntry, filterCutoffEntry, filterStageSelected, 0, serPort))
+        startButton = tk.Button(frame, text="Run", command=lambda: self.startTeensy())
         startButton.grid(row=r, column=0, columnspan=2, sticky=tk.W+tk.E)
-        startButtonFast = tk.Button(frame, text="Run Fast Mode", command=lambda: self.startTeensy(frequencyEntry, sampleEntry, numPointsEntry, filterCutoffEntry, filterStageSelected, 1, serPort))
-        startButtonFast.grid(row=r, column=2, columnspan=2, sticky=tk.W+tk.E)
-        r += 1
 
         #save button
         saveButton = tk.Button(frame, text="Save Data", command=lambda: self.saveData())
@@ -232,10 +221,10 @@ class lockInDetection(tk.Frame):
         sys.stdout = StdoutRedirector(output)
         return frame
 
-    def startSerial(self, serPort):
+    def startSerial(self):
         '''Opens serial port'''
         try:
-            port = serPort.get()
+            port = self.serPort.get()
         except:
             print("Serial Port Not Specified")
         #port = "COM" + port
@@ -257,62 +246,40 @@ class lockInDetection(tk.Frame):
         except:
             print("No serial port open")
 
-    def startTeensy(self, refFreqOrDur, sampRate, numPoints, filterCutoff, filterStage, fastMode, serPort):
+    def startTeensy(self):
         '''
         Uploads script to arduino and processes the data recieved
         Returns True if successful and false if not
         '''
         try:
-            self.startSerial(serPort) #start the serial port
+            self.startSerial(self.serPort) #start the serial port
             self.ser.reset_output_buffer()
             self.ser.reset_input_buffer()
-            try:
-                sampRate = int(sampRate.get()) #get sample rate
-            except:
-                sampRate = 10000
-            try:
-                numPoints = int(numPoints.get())
-            except:
-                numPoints = 10000
-            try:
-                filterCutoff = int(filterCutoff.get())
-            except:
-                filterCutoff = 5
-            filterStage = filterStage.get()
+            self.checkVals() #need to implement
             if self.refSelect.get() == 0:  # internal reference selected
-                try:
-                    refFreqOrDur = int(refFreqOrDur.get())
-                    # if internal ref, calculate and display actual frequency
-                    teensy_clk_periods = int(self.teensy_clock_freq / (refFreqOrDur * self.sine_lut_length)) # corresponds to mod in Teensy code
-                    actual_freq = self.teensy_clock_freq / (teensy_clk_periods
+                # if internal ref, calculate and display actual frequency
+                teensy_clk_periods = int(self.teensy_clock_freq / (self.freqDurVal * self.sine_lut_length)) # corresponds to mod in Teensy code
+                actual_freq = self.teensy_clock_freq / (teensy_clk_periods
                                                             * self.sine_lut_length)
-                    print('Actual frequency: ', actual_freq, ' Hz')
-                except:
-                    return False
-            else:
-                try:
-                    refFreqOrDur = int(refFreqOrDur.get())
-                except:
-                    refFreqOrDur = 5000
-            stringToSend = str(self.refSelect.get()) + ":" + str(refFreqOrDur) + ":" + str(sampRate) + ":" + str(numPoints) + ":" + str(filterCutoff) + ":" + str(filterStage) + ":" + str(fastMode) + "F"
+                print('Actual frequency: ', actual_freq, ' Hz')
+            stringToSend = str(self.refSelect.get()) + ":" + str(self.freqDurVal) + ":" + str(self.sampleVal) + ":" + str(self.numPoints) + ":" + str(self.cutoff) + ":" + str(self.filterStageSelected) + ":" + str(self.mode) + "F"
             #send data
             try:
                 self.ser.write(str(stringToSend).encode('utf-8'))
             except:
                 print("writing timed out")
             
-            if fastMode == 0:
-                self.processData(numPoints)
+            if self.mode == 0:
+                self.processData(self.numPoints)
             else:
-                self.processFastData(numPoints)
+                self.processFastData(self.numPoints)
             return True
         except:
             print("Failed in startTeensy")
             return False
         
-    def processFastData(self, numPoints):
+    def processFastData(self):
         try:
-
             waitctr = 0
             while self.ser.in_waiting == 0:
                 waitctr += 1
@@ -345,7 +312,7 @@ class lockInDetection(tk.Frame):
             exc_type, exc_obj, exc_tb = sys.exc_info()
             print(e, exc_type, exc_tb.tb_lineno)
 
-    def processData(self, numPoints):
+    def processData(self):
         '''
         Processes the data, returns true if successful, false if otherwise
         '''
@@ -362,10 +329,10 @@ class lockInDetection(tk.Frame):
                 print("Measured External Reference Frequency [Hz]:", externalRefFreq)
             
             d = ''
-            if numPoints > 100:
-                cutoff = numPoints - 100
+            if self.numPoints > 100:
+                cutoff = self.numPoints - 100
             else:
-                cutoff = numPoints
+                cutoff = self.numPoints
             #use a timer to prevent infinite loops
             start = time.time()
             while count < cutoff: #expecting 10000 lines of data right now
