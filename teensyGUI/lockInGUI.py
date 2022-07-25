@@ -52,12 +52,14 @@ class lockInDetection(tk.Frame):
         aquisitionFrame = self.createAquisitionWidgets(tk.Frame(self.parent))
         filterFrame = self.createFilteringWidgets(tk.Frame(self.parent))
         postFrame = self.createPostWidgets(tk.Frame(self.parent))
-        #outFrame = self.createOutWidgets(tk.Frame(self.parent))
+        buttonFrame = self.createButtonWidgets(tk.Frame(self.parent))
+        outFrame = self.createOutWidgets(tk.Frame(self.parent))
         serialFrame.grid(row=2, column = 1, padx = 10)
         aquisitionFrame.grid(row=2, column = 2, padx = 10)
         filterFrame.grid(row=2, column = 3, padx = 10)
         postFrame.grid(row=2, column = 4, padx = 10)
-        #outFrame.grid(row=3, column = 1, columnspan = 4, padx = 10)
+        buttonFrame.grid(row = 3, column = 1, columnspan = 2, padx = 10, pady=20)
+        outFrame.grid(row=3, column = 3, columnspan = 2, padx = 10, pady=20)
     
     def createTitleWidgets(self):
         titleFrame = tk.Frame(self.parent)
@@ -208,20 +210,19 @@ class lockInDetection(tk.Frame):
         percentBar.set(75)
         return frame
 
-    def createOutWidgets(self, frame):
-        r=1
+    def createButtonWidgets(self, frame):
         #start button
-        startButton = tk.Button(frame, text="Run", command=lambda: self.startTeensy())
-        startButton.grid(row=r, column=0, columnspan=2, sticky=tk.W+tk.E)
-
+        startButton = tk.Button(frame, text="Run", font=('Arial', 15), width = 10, height = 4, command=lambda: self.startTeensy())
+        startButton.grid(row=1, column=1, columnspan = 4, padx = 5)
         #save button
-        saveButton = tk.Button(frame, text="Save Data", command=lambda: self.saveData())
-        saveButton.grid(row=r, columnspan=4, sticky=tk.W+tk.E)
-        r += 1
+        saveButton = tk.Button(frame, text="Save Data", font=('Arial', 15), width = 10, height = 4, command=lambda: self.saveData())
+        saveButton.grid(row=1, column = 5, columnspan = 4, padx = 5)
+        return frame
 
+    def createOutWidgets(self, frame):
         #output
         output = tk.Text(frame)
-        output.grid(row=r, columnspan=4, sticky=tk.W+tk.E)
+        output.grid(row=1, column = 1, padx = 50)
         sys.stdout = StdoutRedirector(output)
         return frame
 
