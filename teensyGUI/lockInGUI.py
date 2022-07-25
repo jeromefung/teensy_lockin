@@ -47,66 +47,109 @@ class lockInDetection(tk.Frame):
 
     def createWidgets(self):
         '''Creates all the widgets needed for the GUI'''
-        self.createSerialPortWidgets(tk.Frame(self.parent))
-        self.createAquisitionWidgets(tk.Frame(self.parent))
-        self.createFilteringWidgets(tk.Frame(self.parent))
-        self.createPostWidgets(tk.Frame(self.parent))
+        self.createTitleWidgets()
+        serialFrame = self.createSerialPortWidgets(tk.Frame(self.parent))
+        aquisitionFrame = self.createAquisitionWidgets(tk.Frame(self.parent))
+        filterFrame = self.createFilteringWidgets(tk.Frame(self.parent))
+        #postFrame = self.createPostWidgets(tk.Frame(self.parent))
+        #outFrame = self.createOutWidgets(tk.Frame(self.parent))
+        serialFrame.grid(row=2, column = 1, padx = 10)
+        aquisitionFrame.grid(row=2, column = 2, padx = 10)
+        filterFrame.grid(row=2, column = 3, padx = 10)
+        #postFrame.grid(row=2, column = 4, padx = 10)
+        #outFrame.grid(row=3, column = 1, columnspan = 4, padx = 10)
+    
+    def createTitleWidgets(self):
+        titleFrame = tk.Frame(self.parent)
+        serialTitle = tk.Label(titleFrame, text = "Serial Port Settings", font=('Arial', 25))
+        serialTitle.grid(row = 1, column = 1)
+        titleFrame.grid(row=1, column=1, padx = 10)
+        aquisitionFrame = tk.Frame(self.parent)
+        aquisitionTitle = tk.Label(aquisitionFrame, text = "Aquisition Settings", font=('Arial', 25))
+        aquisitionTitle.grid(row=1, column = 2)
+        aquisitionFrame.grid(row=1, column=2, padx = 10)
 
     def createSerialPortWidgets(self, frame):
-        r=1
         #serial port
         serPortLabel = tk.Label(frame, text="Serial Port:")
-        serPortLabel.grid(row=r, column=0, columnspan=1, sticky=tk.W+tk.E)
+        serPortLabel.grid(row=2, column=0)
         serPort = tk.Entry(frame)
-        serPort.grid(row=1, column=1, sticky=tk.W+tk.E)
-        frame.grid(row=1, column = 1, sticky=tk.W+tk.E)
+        serPort.grid(row=2, column=1)
+        return frame
     
     def createAquisitionWidgets(self, frame):
-        r = 1
-
+        r=1
+        self.freqDurVal = 1000
         #change options based off reference mode
-        self.frequencyLabel = tk.Label(frame, text="Internal Reference Frequency:")
-        def internal():
-            self.frequencyLabel = tk.Label(frame, text="Internal Reference Frequency:")
-            self.frequencyLabel.grid(row=freqLabelRow, columnspan=4, sticky=tk.W+tk.E)
-        def external():
-            self.frequencyLabel = tk.Label(frame, text="External Reference Frequency Count Duration (default 5000 ms):")
-            self.frequencyLabel.grid(row=freqLabelRow, columnspan=4, sticky=tk.W+tk.E)
+        frequencyLabel = tk.Label(frame, text="Internal Reference Frequency: " + str(self.freqDurVal))
+        def internal(val):
+            self.freqDurVal = val
+            frequencyLabel.config(text="Internal Reference Frequency: " + str(self.freqDurVal))
+        def external(val):
+            self.freqDurVal = val
+            frequencyLabel.config(text="External Reference Frequency Count Duration: " + str(self.freqDurVal))
 
         #reference signal
-        internalButton = tk.Radiobutton(frame, text="Internal Reference", variable=self.refSelect, value=0, command=lambda: internal())
+        radioFrame = tk.Frame(frame)
+        internalButton = tk.Radiobutton(radioFrame, text="Internal Reference", variable=self.refSelect, value=0, command=lambda: internal(1000))
         internalButton.select()
-        internalButton.grid(row=r, columnspan=4, sticky=tk.W+tk.E)
-        r += 1
-        externalButton = tk.Radiobutton(frame, text="External Reference", variable=self.refSelect, value=1, command=lambda: external())
+        internalButton.grid(row=1, column = 1, columnspan=4)
+        externalButton = tk.Radiobutton(radioFrame, text="External Reference", variable=self.refSelect, value=1, command=lambda: external(5000))
         externalButton.deselect()
-        externalButton.grid(row=r, columnspan=4, sticky=tk.W+tk.E)
-        r += 1
-
+        externalButton.grid(row=1, column = 5, columnspan=4)
+        radioFrame.grid(row = r, column=1, columnspan = 4)
+        r+=1
+        def updateRef(val):
+            try:
+                val = int(val)
+                self.freqDurVal = val
+                if self.refSelect.get() == 0:
+                    internal(val)
+                else:
+                    external(val)
+            except:
+                pass
         #internal or external ref freq
-        self.frequencyLabel.grid(row=r, columnspan=4, sticky=tk.W+tk.E)
-        freqLabelRow = r
+        frequencyLabel.grid(row=r, column = 1, columnspan=4)
         r += 1
         frequencyEntry = tk.Entry(frame)
-        frequencyEntry.grid(row=r, columnspan=4, sticky=tk.W+tk.E)
-        r += 1
+        frequencyEntry.grid(row=r, column = 1, columnspan=4)
+        frequencyEntry.bind("<Return>", lambda event: updateRef(frequencyEntry.get()))
+        r+=1
 
+        def updateSamp(val):
+            try:
+                val = int(val)
+                self.sampleVal = val
+                sampleLabel.config(text="Sampling Rate: " + str(self.sampleVal))
+            except:
+                pass
         #sampling rate
-        sampleLabel = tk.Label(frame, text="Sampling Rate (default 10,000):") #maybe change to dropdown menu in the future
-        sampleLabel.grid(row=r, columnspan=4, sticky=tk.W+tk.E)
+        self.sampleVal = 10000
+        sampleLabel = tk.Label(frame, text="Sampling Rate: " + str(self.sampleVal))
+        sampleLabel.grid(row=r, column = 1, columnspan=4)
         r += 1
         sampleEntry = tk.Entry(frame)
-        sampleEntry.grid(row=r, columnspan=4, sticky=tk.W+tk.E)
+        sampleEntry.grid(row=r, column = 1, columnspan=4)
+        sampleEntry.bind("<Return>", lambda event: updateSamp(sampleEntry.get()))
         r += 1
 
+        def updateNumPoints(val):
+            try:
+                val = int(val)
+                self.numPoints = val
+                numPointsLabel.config(text="Number of Points to Measure: " + str(self.numPoints))
+            except:
+                pass
         #number of data points
-        numPointsLabel = tk.Label(frame, text="Number of Points to Measure (default 10,000):")
-        numPointsLabel.grid(row=r, columnspan=4, sticky=tk.W+tk.E)
+        self.numPoints = 10000
+        numPointsLabel = tk.Label(frame, text="Number of Points to Measure: " + str(self.numPoints))
+        numPointsLabel.grid(row=r, column = 1, columnspan=4)
         r += 1
         numPointsEntry = tk.Entry(frame)
-        numPointsEntry.grid(row = r, columnspan = 6, sticky=tk.W+tk.E)
-        r += 1
-        frame.grid(row=1, column = 2, sticky=tk.W+tk.E)
+        numPointsEntry.grid(row = r, column = 1, columnspan = 4)
+        numPointsEntry.bind("<Return>", lambda event: updateNumPoints(numPointsEntry.get()))
+        return frame
 
     def createFilteringWidgets(self, frame):
         r=1
@@ -122,7 +165,7 @@ class lockInDetection(tk.Frame):
         filterStageSelected.set(1)
         filterStageMenu = tk.OptionMenu(frame, filterStageSelected, *filterStageOptions)
         filterStageMenu.grid(row=r, column = 3, sticky=tk.W+tk.E)
-        frame.grid(row=1, column = 3, sticky=tk.W+tk.E)
+        return frame
     
     def createPostWidgets(self, frame):
         r=1
@@ -151,7 +194,7 @@ class lockInDetection(tk.Frame):
         output = tk.Text(frame)
         output.grid(row=r, columnspan=4, sticky=tk.W+tk.E)
         sys.stdout = StdoutRedirector(output)
-        frame.grid(row=1, column = 4, sticky=tk.W+tk.E)
+        return frame
 
     def startSerial(self, serPort):
         '''Opens serial port'''
