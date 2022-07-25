@@ -90,19 +90,23 @@ class lockInDetection(tk.Frame):
         self.freqDurVal = 1000
         #change options based off reference mode
         frequencyLabel = tk.Label(frame, text="Internal Reference Frequency: " + str(self.freqDurVal))
-        def internal(val):
+        def internal(val, d=False):
             self.freqDurVal = val
             frequencyLabel.config(text="Internal Reference Frequency: " + str(self.freqDurVal))
-        def external(val):
+            if d:
+                self.frequencyEntry.delete(0, tk.END)
+        def external(val, d=False):
             self.freqDurVal = val
             frequencyLabel.config(text="External Reference Frequency Count Duration: " + str(self.freqDurVal))
+            if d:
+                self.frequencyEntry.delete(0, tk.END)
 
         #reference signal
         radioFrame = tk.Frame(frame)
-        internalButton = tk.Radiobutton(radioFrame, text="Internal Reference", variable=self.refSelect, value=0, command=lambda: internal(1000))
+        internalButton = tk.Radiobutton(radioFrame, text="Internal Reference", variable=self.refSelect, value=0, command=lambda: internal(1000, True))
         internalButton.select()
         internalButton.grid(row=1, column = 1, columnspan=4)
-        externalButton = tk.Radiobutton(radioFrame, text="External Reference", variable=self.refSelect, value=1, command=lambda: external(5000))
+        externalButton = tk.Radiobutton(radioFrame, text="External Reference", variable=self.refSelect, value=1, command=lambda: external(5000, True))
         externalButton.deselect()
         externalButton.grid(row=1, column = 5, columnspan=4)
         radioFrame.grid(row = r, column=1, columnspan = 4)
