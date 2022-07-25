@@ -66,8 +66,12 @@ class lockInDetection(tk.Frame):
         titleFrame.grid(row=1, column=1, padx = 10)
         aquisitionFrame = tk.Frame(self.parent)
         aquisitionTitle = tk.Label(aquisitionFrame, text = "Aquisition Settings", font=('Arial', 25))
-        aquisitionTitle.grid(row=1, column = 2)
+        aquisitionTitle.grid(row=1, column = 1)
         aquisitionFrame.grid(row=1, column=2, padx = 10)
+        filterFrame = tk.Frame(self.parent)
+        filterTitle = tk.Label(filterFrame, text = "Filtering Settings", font = ('Arial', 25))
+        filterTitle.grid(row = 1, column = 1)
+        filterFrame.grid(row=1, column=3, padx=10)
 
     def createSerialPortWidgets(self, frame):
         #serial port
@@ -154,10 +158,21 @@ class lockInDetection(tk.Frame):
     def createFilteringWidgets(self, frame):
         r=1
         #low pass filter
-        filterCutoffLabel = tk.Label(frame, text="LP Cutoff Freq (default 5):")
-        filterCutoffLabel.grid(row=r, column = 0, sticky=tk.W+tk.E)
+        def updateCutoff(val):
+            try:
+                val = int(val)
+                self.cutoff = val
+                filterCutoffLabel.config(text="LP Cutoff Freq: " + str(self.cutoff))
+            except:
+                pass
+        self.cutoff = 5
+        filterCutoffLabel = tk.Label(frame, text="LP Cutoff Freq: " + str(self.cutoff))
+        filterCutoffLabel.grid(row=r, column = 1, columnspan=4)
+        r+=1
         filterCutoffEntry = tk.Entry(frame)
-        filterCutoffEntry.grid(row=r, column=1, sticky=tk.W+tk.E)
+        filterCutoffEntry.grid(row=r, column=1, columnspan=4)
+        filterCutoffEntry.bind("<Return>", lambda event: updateCutoff(filterCutoffEntry.get()))
+        r+=1
         filterStageLabel = tk.Label(frame, text="Filter Order:")
         filterStageLabel.grid(row = r, column = 2, sticky=tk.W+tk.E)
         filterStageOptions = [1, 2, 3, 4]
