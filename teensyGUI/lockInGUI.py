@@ -119,9 +119,9 @@ class lockInDetection(tk.Frame):
         #internal or external ref freq
         frequencyLabel.grid(row=r, column = 1, columnspan=4)
         r += 1
-        frequencyEntry = tk.Entry(frame)
-        frequencyEntry.grid(row=r, column = 1, columnspan=4)
-        frequencyEntry.bind("<Return>", lambda event: updateRef(frequencyEntry.get()))
+        self.frequencyEntry = tk.Entry(frame)
+        self.frequencyEntry.grid(row=r, column = 1, columnspan=4)
+        self.frequencyEntry.bind("<Return>", lambda event: updateRef(self.frequencyEntry.get()))
         r+=1
 
         def updateSamp(val):
@@ -136,9 +136,9 @@ class lockInDetection(tk.Frame):
         sampleLabel = tk.Label(frame, text="Sampling Rate: " + str(self.sampleVal))
         sampleLabel.grid(row=r, column = 1, columnspan=4)
         r += 1
-        sampleEntry = tk.Entry(frame)
-        sampleEntry.grid(row=r, column = 1, columnspan=4)
-        sampleEntry.bind("<Return>", lambda event: updateSamp(sampleEntry.get()))
+        self.sampleEntry = tk.Entry(frame)
+        self.sampleEntry.grid(row=r, column = 1, columnspan=4)
+        self.sampleEntry.bind("<Return>", lambda event: updateSamp(self.sampleEntry.get()))
         r += 1
 
         def updateNumPoints(val):
@@ -155,9 +155,9 @@ class lockInDetection(tk.Frame):
         numPointsLabel = tk.Label(frame, text="Number of Points to Measure: " + str(self.numPoints))
         numPointsLabel.grid(row=r, column = 1, columnspan=4)
         r += 1
-        numPointsEntry = tk.Entry(frame)
-        numPointsEntry.grid(row = r, column = 1, columnspan = 4)
-        numPointsEntry.bind("<Return>", lambda event: updateNumPoints(numPointsEntry.get()))
+        self.numPointsEntry = tk.Entry(frame)
+        self.numPointsEntry.grid(row = r, column = 1, columnspan = 4)
+        self.numPointsEntry.bind("<Return>", lambda event: updateNumPoints(self.numPointsEntry.get()))
         return frame
 
     def createFilteringWidgets(self, frame):
@@ -174,9 +174,9 @@ class lockInDetection(tk.Frame):
         filterCutoffLabel = tk.Label(frame, text="LP Cutoff Freq: " + str(self.cutoff))
         filterCutoffLabel.grid(row=r, column = 1, columnspan=4)
         r+=1
-        filterCutoffEntry = tk.Entry(frame)
-        filterCutoffEntry.grid(row=r, column=1, columnspan=4)
-        filterCutoffEntry.bind("<Return>", lambda event: updateCutoff(filterCutoffEntry.get()))
+        self.filterCutoffEntry = tk.Entry(frame)
+        self.filterCutoffEntry.grid(row=r, column=1, columnspan=4)
+        self.filterCutoffEntry.bind("<Return>", lambda event: updateCutoff(self.filterCutoffEntry.get()))
         r+=1
         filterStageLabel = tk.Label(frame, text="Filter Order:")
         filterStageLabel.grid(row = r, column = 2, sticky=tk.W+tk.E)
@@ -221,6 +221,34 @@ class lockInDetection(tk.Frame):
         sys.stdout = StdoutRedirector(output)
         return frame
 
+    def checkVals(self):
+        try:
+            val = int(self.frequencyEntry.get())
+            if val != self.freqDurVal:
+                self.freqDurVal = val
+        except:
+            pass
+        try:
+            val = int(self.sampleEntry.get())
+            if val != self.sampleVal:
+                self.sampleVal = val
+        except:
+            pass
+        try:
+            val = int(self.numPointsEntry.get())
+            if val > 15000:
+                val = 15000
+            if val != self.numPoints:
+                self.numPoints = val
+        except:
+            pass
+        try:
+            val = int(self.filterCutoffEntry.get())
+            if val != self.cutoff:
+                self.cutoff = val
+        except:
+            pass
+
     def startSerial(self):
         '''Opens serial port'''
         try:
@@ -255,7 +283,7 @@ class lockInDetection(tk.Frame):
             self.startSerial(self.serPort) #start the serial port
             self.ser.reset_output_buffer()
             self.ser.reset_input_buffer()
-            self.checkVals() #need to implement
+            self.checkVals()
             if self.refSelect.get() == 0:  # internal reference selected
                 # if internal ref, calculate and display actual frequency
                 teensy_clk_periods = int(self.teensy_clock_freq / (self.freqDurVal * self.sine_lut_length)) # corresponds to mod in Teensy code
