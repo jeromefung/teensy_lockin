@@ -116,10 +116,11 @@ class LockInDetection(tk.Frame):
         def updateRef(val):
             try:
                 val = int(val)
-                if self.refSelect.get() == 0:
-                    internal(val)
-                else:
-                    external(val)
+                if val > 0:
+                    if self.refSelect.get() == 0:
+                        internal(val)
+                    else:
+                        external(val)
             except:
                 pass
         #internal or external ref freq
@@ -133,8 +134,9 @@ class LockInDetection(tk.Frame):
         def updateSamp(val):
             try:
                 val = int(val)
-                self.sampleVal = val
-                sampleLabel.config(text="Sampling Rate: " + str(self.sampleVal))
+                if val > 0:
+                    self.sampleVal = val
+                    sampleLabel.config(text="Sampling Rate: " + str(self.sampleVal))
             except:
                 pass
         #sampling rate
@@ -152,8 +154,9 @@ class LockInDetection(tk.Frame):
                 val = int(val)
                 if val > 15000:
                     val = 15000
-                self.numPoints = val
-                numPointsLabel.config(text="Number of Points to Measure: " + str(self.numPoints))
+                if val > 0:
+                    self.numPoints = val
+                    numPointsLabel.config(text="Number of Points to Measure: " + str(self.numPoints))
             except:
                 pass
         #number of data points
@@ -172,8 +175,9 @@ class LockInDetection(tk.Frame):
         def updateCutoff(val):
             try:
                 val = int(val)
-                self.cutoff = val
-                filterCutoffLabel.config(text="Low Pass Cutoff Freq: " + str(self.cutoff))
+                if val > 0:
+                    self.cutoff = val
+                    filterCutoffLabel.config(text="Low Pass Cutoff Freq: " + str(self.cutoff))
             except:
                 pass
         self.cutoff = 5
@@ -229,28 +233,32 @@ class LockInDetection(tk.Frame):
     def checkVals(self):
         try:
             val = int(self.frequencyEntry.get())
-            if val != self.freqDurVal:
-                self.freqDurVal = val
+            if val > 0:
+                if val != self.freqDurVal:
+                    self.freqDurVal = val
         except:
             pass
         try:
             val = int(self.sampleEntry.get())
-            if val != self.sampleVal:
-                self.sampleVal = val
+            if val > 0:
+                if val != self.sampleVal:
+                    self.sampleVal = val
         except:
             pass
         try:
             val = int(self.numPointsEntry.get())
-            if val > 15000:
-                val = 15000
-            if val != self.numPoints:
-                self.numPoints = val
+            if val > 0:
+                if val > 15000:
+                    val = 15000
+                if val != self.numPoints:
+                    self.numPoints = val
         except:
             pass
         try:
             val = int(self.filterCutoffEntry.get())
-            if val != self.cutoff:
-                self.cutoff = val
+            if val > 0:
+                if val != self.cutoff:
+                    self.cutoff = val
         except:
             pass
 
