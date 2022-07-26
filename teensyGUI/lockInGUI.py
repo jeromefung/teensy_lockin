@@ -212,6 +212,26 @@ class LockInDetection(tk.Frame):
         percentBar = tk.Scale(frame, variable=self.percent, from_ = 0, to = 100, orient = tk.HORIZONTAL)
         percentBar.grid(row = 2, column=2, columnspan=2)
         percentBar.set(75)
+        def updatePercent():
+            try:
+                val = int(self.percentEntry.get())
+                if val > 100:
+                    val = 100
+                elif val < 0:
+                    val = 0
+                percentBar.set(val)
+                self.percentEntry.delete(0, tk.END)
+                self.percentEntry.insert(0, val)
+            except:
+                pass
+        def updateEntry():
+            self.percentEntry.delete(0, tk.END)
+            self.percentEntry.insert(0, self.percent.get())
+        self.percentEntry = tk.Entry(frame)
+        self.percentEntry.grid(row = 3, column = 2, columnspan = 2)
+        self.percentEntry.insert(0, self.percent.get())
+        self.percentEntry.bind("<Return>", lambda event: updatePercent())
+        percentBar.bind("<ButtonRelease-1>", lambda event: updateEntry())
         return frame
 
     def createButtonWidgets(self, frame):
@@ -225,8 +245,10 @@ class LockInDetection(tk.Frame):
 
     def createOutWidgets(self, frame):
         #output
+        outputLabel = tk.Label(frame, text="Output:")
+        outputLabel.grid(row = 1, column = 1)
         output = tk.Text(frame)
-        output.grid(row=1, column = 1, padx = 50)
+        output.grid(row=2, column = 1, padx = 50)
         sys.stdout = StdoutRedirector(output)
         return frame
 
@@ -259,6 +281,16 @@ class LockInDetection(tk.Frame):
             if val > 0:
                 if val != self.cutoff:
                     self.cutoff = val
+        except:
+            pass
+        try:
+            val = int(self.percentEntry.get())
+            if val < 0:
+                val = 0
+            elif val > 100:
+                val = 100
+            if val != self.percent:
+                self.percent = val
         except:
             pass
 
