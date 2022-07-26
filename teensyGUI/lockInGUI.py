@@ -18,7 +18,7 @@ class StdoutRedirector(IORedirector):
     def write(self,str):
         self.text_area.insert(tk.END,str)
 
-class lockInDetection(tk.Frame):
+class LockInDetection(tk.Frame):
     '''
     Frame object to be use in GUI for lock in detection with teensy microcontroller
     Properties:
@@ -474,7 +474,7 @@ def main():
     for port in port_list:
         print(port)
     root = tk.Tk()
-    frame = lockInDetection(root)
+    frame = LockInDetection(root)
     frame.grid()
     root.mainloop()
     sys.stdout = sys.__stdout__
