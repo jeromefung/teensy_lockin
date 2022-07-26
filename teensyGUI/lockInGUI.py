@@ -285,6 +285,7 @@ class lockInDetection(tk.Frame):
         Returns True if successful and false if not
         '''
         try:
+            print("------------------------")
             self.startSerial(self.serPort) #start the serial port
             self.ser.reset_output_buffer()
             self.ser.reset_input_buffer()
@@ -296,6 +297,25 @@ class lockInDetection(tk.Frame):
                                                             * self.sine_lut_length)
                 print('Actual frequency: ', actual_freq, ' Hz')
             stringToSend = str(self.refSelect.get()) + ":" + str(self.freqDurVal) + ":" + str(self.sampleVal) + ":" + str(self.numPoints) + ":" + str(self.cutoff) + ":" + str(self.filterStageSelected) + ":" + str(self.mode) + "F"
+            print("Instuction Sent:")
+            print("Reference Mode: ", end="")
+            if self.refSelect.get() == 0:
+                print("Internal Reference")
+                print("Reference Frequency: ", end="")
+            else:
+                print("External Reference")
+                print("Frequency Count Duration: ", end="")
+            print(self.freqDurVal)
+            print("Sampling Rate:", self.sampleVal)
+            print("Num Points:", self.numPoints)
+            print("Filter Cutoff Frequency:", self.cutoff)
+            print("Filter Order:", self.filterStageSelected)
+            print("Mode: ", end="")
+            if self.mode == 0:
+                print("Normal Mode")
+            else:
+                print("Fast Mode")
+            
             #send data
             try:
                 self.ser.write(str(stringToSend).encode('utf-8'))
