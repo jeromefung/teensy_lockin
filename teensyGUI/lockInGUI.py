@@ -63,43 +63,58 @@ class lockInDetection(tk.Frame):
     
     def createTitleWidgets(self):
         titleFrame = tk.Frame(self.parent)
-        serialTitle = tk.Label(titleFrame, text = "Serial Port Settings", font=('Arial', 25))
+        serialTitle = tk.Label(titleFrame, text = "Serial Port Settings", font=('Arial', 18))
         serialTitle.grid(row = 1, column = 1)
         titleFrame.grid(row=1, column=1, padx = 10)
         aquisitionFrame = tk.Frame(self.parent)
-        aquisitionTitle = tk.Label(aquisitionFrame, text = "Aquisition Settings", font=('Arial', 25))
+        aquisitionTitle = tk.Label(aquisitionFrame, text = "Acquisition Settings", font=('Arial', 18))
         aquisitionTitle.grid(row=1, column = 1)
         aquisitionFrame.grid(row=1, column=2, padx = 10)
         filterFrame = tk.Frame(self.parent)
-        filterTitle = tk.Label(filterFrame, text = "Filtering Settings", font = ('Arial', 25))
+        filterTitle = tk.Label(filterFrame, text = "Filtering Settings", font = ('Arial', 18))
         filterTitle.grid(row = 1, column = 1)
         filterFrame.grid(row=1, column=3, padx=10)
         postFrame = tk.Frame(self.parent)
-        postTitle = tk.Label(postFrame, text="Post Processing Settings", font = ('Arial', 25))
+        postTitle = tk.Label(postFrame, text="Post Processing Settings", font = ('Arial', 18))
         postTitle.grid(row=1, column=1)
         postFrame.grid(row=1, column=4, padx=10)
 
     def createSerialPortWidgets(self, frame):
         #serial port
-        serPortLabel = tk.Label(frame, text="Serial Port:")
+        serPortLabel = tk.LabelFrame(frame, text="Teensy serial port:")
         serPortLabel.grid(row=2, column=0)
-        self.serPort = tk.Entry(frame)
-        self.serPort.grid(row=2, column=1)
+
+        ports_list = list(serial.tools.list_ports.comports())
+        port_name_lengths = [len(port[0]) for port in ports_list]
+        max_length = max(port_name_lengths)
+
+        # default to last port
+        self.serPort = tk.StringVar(value = ports_list[-1][0])
+        #serRadioFrame = tk.Frame(frame)
+        
+        for port, ctr in zip(ports_list, range(len(ports_list))):
+            button = tk.Radiobutton(serPortLabel,
+                                    text = port[0].ljust(max_length),
+                                    var = self.serPort,
+                                    value = port[0])
+            button.grid(row = ctr, column = 1)
+            
+        #serRadioFrame.grid(row=3, column=0)
         return frame
     
     def createAquisitionWidgets(self, frame):
         r=1
         self.freqDurVal = 1000
         #change options based off reference mode
-        frequencyLabel = tk.Label(frame, text="Internal Reference Frequency: " + str(self.freqDurVal))
+        frequencyLabel = tk.Label(frame, text="Internal Reference Frequency (Hz): " + str(self.freqDurVal))
         def internal(val, d=False):
             self.freqDurVal = val
-            frequencyLabel.config(text="Internal Reference Frequency: " + str(self.freqDurVal))
+            frequencyLabel.config(text="Reference Frequency (Hz): " + str(self.freqDurVal))
             if d:
                 self.frequencyEntry.delete(0, tk.END)
         def external(val, d=False):
             self.freqDurVal = val
-            frequencyLabel.config(text="External Reference Frequency Count Duration: " + str(self.freqDurVal))
+            frequencyLabel.config(text="Reference Frequency Count Duration (ms): " + str(self.freqDurVal))
             if d:
                 self.frequencyEntry.delete(0, tk.END)
 
@@ -134,12 +149,12 @@ class lockInDetection(tk.Frame):
             try:
                 val = int(val)
                 self.sampleVal = val
-                sampleLabel.config(text="Sampling Rate: " + str(self.sampleVal))
+                sampleLabel.config(text="Sampling Rate (Hz): " + str(self.sampleVal))
             except:
                 pass
         #sampling rate
         self.sampleVal = 10000
-        sampleLabel = tk.Label(frame, text="Sampling Rate: " + str(self.sampleVal))
+        sampleLabel = tk.Label(frame, text="Sampling Rate (Hz): " + str(self.sampleVal))
         sampleLabel.grid(row=r, column = 1, columnspan=4)
         r += 1
         self.sampleEntry = tk.Entry(frame)
@@ -173,11 +188,11 @@ class lockInDetection(tk.Frame):
             try:
                 val = int(val)
                 self.cutoff = val
-                filterCutoffLabel.config(text="Low Pass Cutoff Freq: " + str(self.cutoff))
+                filterCutoffLabel.config(text="Low Pass Cutoff Freq (Hz): " + str(self.cutoff))
             except:
                 pass
         self.cutoff = 5
-        filterCutoffLabel = tk.Label(frame, text="Low Pass Cutoff Freq: " + str(self.cutoff))
+        filterCutoffLabel = tk.Label(frame, text="Low Pass Cutoff Freq (Hz): " + str(self.cutoff))
         filterCutoffLabel.grid(row=r, column = 1, columnspan=4)
         r+=1
         self.filterCutoffEntry = tk.Entry(frame)
@@ -285,7 +300,7 @@ class lockInDetection(tk.Frame):
         Returns True if successful and false if not
         '''
         try:
-            self.startSerial(self.serPort) #start the serial port
+            self.startSerial() #start the serial port
             self.ser.reset_output_buffer()
             self.ser.reset_input_buffer()
             self.checkVals()
@@ -295,17 +310,17 @@ class lockInDetection(tk.Frame):
                 actual_freq = self.teensy_clock_freq / (teensy_clk_periods
                                                             * self.sine_lut_length)
                 print('Actual frequency: ', actual_freq, ' Hz')
-            stringToSend = str(self.refSelect.get()) + ":" + str(self.freqDurVal) + ":" + str(self.sampleVal) + ":" + str(self.numPoints) + ":" + str(self.cutoff) + ":" + str(self.filterStageSelected) + ":" + str(self.mode) + "F"
+            stringToSend = str(self.refSelect.get()) + ":" + str(self.freqDurVal) + ":" + str(self.sampleVal) + ":" + str(self.numPoints) + ":" + str(self.cutoff) + ":" + str(self.filterStageSelected.get()) + ":" + str(self.mode) + "F"
             #send data
             try:
                 self.ser.write(str(stringToSend).encode('utf-8'))
             except:
                 print("writing timed out")
-            
+
             if self.mode == 0:
-                self.processData(self.numPoints)
+                self.processData()
             else:
-                self.processFastData(self.numPoints)
+                self.processFastData()
             return True
         except:
             print("Failed in startTeensy")
@@ -354,7 +369,7 @@ class lockInDetection(tk.Frame):
             count = 0
             while self.ser.in_waiting == 0: #while nothing in serial do nothing
                 pass
-            
+
             #unsure if this will work for getting external ref freq - needs to be tested
             if self.refSelect.get() == 1:
                 externalRefFreq = str(self.ser.readline().strip())
@@ -366,6 +381,7 @@ class lockInDetection(tk.Frame):
                 cutoff = self.numPoints - 100
             else:
                 cutoff = self.numPoints
+            
             #use a timer to prevent infinite loops
             start = time.time()
             while count < cutoff: #expecting 10000 lines of data right now
@@ -450,9 +466,10 @@ class lockInDetection(tk.Frame):
 
 
 def main():
-    port_list = list(serial.tools.list_ports.comports())
-    for port in port_list:
-        print(port)
+    #port_list = list(serial.tools.list_ports.comports())
+    #print('Available ports:')
+    #for port in port_list:
+    #    print(port)
     root = tk.Tk()
     frame = lockInDetection(root)
     frame.grid()
