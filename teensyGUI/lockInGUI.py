@@ -18,7 +18,7 @@ class StdoutRedirector(IORedirector):
     def write(self,str):
         self.text_area.insert(tk.END,str)
 
-class lockInDetection(tk.Frame):
+class LockInDetection(tk.Frame):
     '''
     Frame object to be use in GUI for lock in detection with teensy microcontroller
     Properties:
@@ -131,10 +131,11 @@ class lockInDetection(tk.Frame):
         def updateRef(val):
             try:
                 val = int(val)
-                if self.refSelect.get() == 0:
-                    internal(val)
-                else:
-                    external(val)
+                if val > 0:
+                    if self.refSelect.get() == 0:
+                        internal(val)
+                    else:
+                        external(val)
             except:
                 pass
         #internal or external ref freq
@@ -148,8 +149,9 @@ class lockInDetection(tk.Frame):
         def updateSamp(val):
             try:
                 val = int(val)
-                self.sampleVal = val
-                sampleLabel.config(text="Sampling Rate (Hz): " + str(self.sampleVal))
+                if val > 0:
+                    self.sampleVal = val
+                    sampleLabel.config(text="Sampling Rate (Hz): " + str(self.sampleVal))
             except:
                 pass
         #sampling rate
@@ -167,8 +169,9 @@ class lockInDetection(tk.Frame):
                 val = int(val)
                 if val > 15000:
                     val = 15000
-                self.numPoints = val
-                numPointsLabel.config(text="Number of Points to Measure: " + str(self.numPoints))
+                if val > 0:
+                    self.numPoints = val
+                    numPointsLabel.config(text="Number of Points to Measure: " + str(self.numPoints))
             except:
                 pass
         #number of data points
@@ -187,8 +190,9 @@ class lockInDetection(tk.Frame):
         def updateCutoff(val):
             try:
                 val = int(val)
-                self.cutoff = val
-                filterCutoffLabel.config(text="Low Pass Cutoff Freq (Hz): " + str(self.cutoff))
+                if val > 0:
+                    self.cutoff = val
+                    filterCutoffLabel.config(text="Low Pass Cutoff Freq (Hz): " + str(self.cutoff))
             except:
                 pass
         self.cutoff = 5
@@ -223,6 +227,26 @@ class lockInDetection(tk.Frame):
         percentBar = tk.Scale(frame, variable=self.percent, from_ = 0, to = 100, orient = tk.HORIZONTAL)
         percentBar.grid(row = 2, column=2, columnspan=2)
         percentBar.set(75)
+        def updatePercent():
+            try:
+                val = int(self.percentEntry.get())
+                if val > 100:
+                    val = 100
+                elif val < 0:
+                    val = 0
+                percentBar.set(val)
+                self.percentEntry.delete(0, tk.END)
+                self.percentEntry.insert(0, val)
+            except:
+                pass
+        def updateEntry():
+            self.percentEntry.delete(0, tk.END)
+            self.percentEntry.insert(0, self.percent.get())
+        self.percentEntry = tk.Entry(frame)
+        self.percentEntry.grid(row = 3, column = 2, columnspan = 2)
+        self.percentEntry.insert(0, self.percent.get())
+        self.percentEntry.bind("<Return>", lambda event: updatePercent())
+        percentBar.bind("<ButtonRelease-1>", lambda event: updateEntry())
         return frame
 
     def createButtonWidgets(self, frame):
@@ -236,36 +260,52 @@ class lockInDetection(tk.Frame):
 
     def createOutWidgets(self, frame):
         #output
+        outputLabel = tk.Label(frame, text="Output:")
+        outputLabel.grid(row = 1, column = 1)
         output = tk.Text(frame)
-        output.grid(row=1, column = 1, padx = 50)
+        output.grid(row=2, column = 1, padx = 50)
         sys.stdout = StdoutRedirector(output)
         return frame
 
     def checkVals(self):
         try:
             val = int(self.frequencyEntry.get())
-            if val != self.freqDurVal:
-                self.freqDurVal = val
+            if val > 0:
+                if val != self.freqDurVal:
+                    self.freqDurVal = val
         except:
             pass
         try:
             val = int(self.sampleEntry.get())
-            if val != self.sampleVal:
-                self.sampleVal = val
+            if val > 0:
+                if val != self.sampleVal:
+                    self.sampleVal = val
         except:
             pass
         try:
             val = int(self.numPointsEntry.get())
-            if val > 15000:
-                val = 15000
-            if val != self.numPoints:
-                self.numPoints = val
+            if val > 0:
+                if val > 15000:
+                    val = 15000
+                if val != self.numPoints:
+                    self.numPoints = val
         except:
             pass
         try:
             val = int(self.filterCutoffEntry.get())
-            if val != self.cutoff:
-                self.cutoff = val
+            if val > 0:
+                if val != self.cutoff:
+                    self.cutoff = val
+        except:
+            pass
+        try:
+            val = int(self.percentEntry.get())
+            if val < 0:
+                val = 0
+            elif val > 100:
+                val = 100
+            if val != self.percent:
+                self.percent = val
         except:
             pass
 
@@ -300,6 +340,7 @@ class lockInDetection(tk.Frame):
         Returns True if successful and false if not
         '''
         try:
+            print("------------------------")
             self.startSerial() #start the serial port
             self.ser.reset_output_buffer()
             self.ser.reset_input_buffer()
@@ -311,6 +352,25 @@ class lockInDetection(tk.Frame):
                                                             * self.sine_lut_length)
                 print('Actual frequency: ', actual_freq, ' Hz')
             stringToSend = str(self.refSelect.get()) + ":" + str(self.freqDurVal) + ":" + str(self.sampleVal) + ":" + str(self.numPoints) + ":" + str(self.cutoff) + ":" + str(self.filterStageSelected.get()) + ":" + str(self.mode) + "F"
+            print("Instuction Sent:")
+            print("Reference Mode: ", end="")
+            if self.refSelect.get() == 0:
+                print("Internal Reference")
+                print("Reference Frequency: ", end="")
+            else:
+                print("External Reference")
+                print("Frequency Count Duration: ", end="")
+            print(self.freqDurVal)
+            print("Sampling Rate:", self.sampleVal)
+            print("Num Points:", self.numPoints)
+            print("Filter Cutoff Frequency:", self.cutoff)
+            print("Filter Order:", self.filterStageSelected.get())
+            print("Mode: ", end="")
+            if self.mode == 0:
+                print("Normal Mode")
+            else:
+                print("Fast Mode")
+            
             #send data
             try:
                 self.ser.write(str(stringToSend).encode('utf-8'))
@@ -471,7 +531,7 @@ def main():
     #for port in port_list:
     #    print(port)
     root = tk.Tk()
-    frame = lockInDetection(root)
+    frame = LockInDetection(root)
     frame.grid()
     root.mainloop()
     sys.stdout = sys.__stdout__
