@@ -60,7 +60,7 @@ class LockInDetection(tk.Frame):
         postFrame.grid(row=2, column = 4, padx = 10)
         buttonFrame.grid(row = 3, column = 1, columnspan = 2, padx = 10, pady=20)
         outFrame.grid(row=3, column = 3, columnspan = 2, padx = 10, pady=20)
-    
+
     def createTitleWidgets(self):
         titleFrame = tk.Frame(self.parent)
         serialTitle = tk.Label(titleFrame, text = "Serial Port Settings", font=('Arial', 18))
@@ -89,19 +89,19 @@ class LockInDetection(tk.Frame):
         max_length = max(port_name_lengths)
 
         # default to last port
-        self.serPort = tk.StringVar(value = ports_list[-1][0])
+        self.serPort = tk.StringVar(value = 'null')
         #serRadioFrame = tk.Frame(frame)
-        
+
         for port, ctr in zip(ports_list, range(len(ports_list))):
             button = tk.Radiobutton(serPortLabel,
                                     text = port[0].ljust(max_length),
                                     var = self.serPort,
                                     value = port[0])
             button.grid(row = ctr, column = 1)
-            
+
         #serRadioFrame.grid(row=3, column=0)
         return frame
-    
+
     def createAquisitionWidgets(self, frame):
         r=1
         self.freqDurVal = 1000
@@ -211,20 +211,23 @@ class LockInDetection(tk.Frame):
         filterStageMenu = tk.OptionMenu(frame, self.filterStageSelected, *filterStageOptions)
         filterStageMenu.grid(row=r, column = 3, sticky=tk.W+tk.E)
         return frame
-    
+
     def createPostWidgets(self, frame):
-        self.mode = 0
-        normalButton = tk.Radiobutton(frame, text="Normal Mode", variable=self.mode, value=0)
+        self.mode = tk.IntVar(value=0)
+        normalButton = tk.Radiobutton(frame, text="Normal Mode",
+                                      var=self.mode, value=0)
         normalButton.select()
         normalButton.grid(row=1, column = 1)
-        fastButton = tk.Radiobutton(frame, text="Fast Mode      ", variable=self.mode, value=1)
-        fastButton.deselect()
+        fastButton = tk.Radiobutton(frame, text="Fast Mode      ",
+                                    var=self.mode, value=1)
+        #fastButton.deselect()
         fastButton.grid(row=2, column = 1)
         #scale bar for number of points to average
         percentLabel = tk.Label(frame, text="Percent of Points used to Average:")
         percentLabel.grid(row = 1, column=2, columnspan=2, padx = 20)
         self.percent = tk.IntVar()
-        percentBar = tk.Scale(frame, variable=self.percent, from_ = 0, to = 100, orient = tk.HORIZONTAL)
+        percentBar = tk.Scale(frame, variable=self.percent, from_ = 0,
+                              to = 100, orient = tk.HORIZONTAL)
         percentBar.grid(row = 2, column=2, columnspan=2)
         percentBar.set(75)
         def updatePercent():
@@ -305,7 +308,7 @@ class LockInDetection(tk.Frame):
             elif val > 100:
                 val = 100
             if val != self.percent:
-                self.percent = val
+                self.percent.set(val)
         except:
             pass
 
@@ -321,7 +324,7 @@ class LockInDetection(tk.Frame):
             if os.name == 'nt':
                 # Implemented in Windows only
                 self.ser.set_buffer_size(rx_size= 100000, tx_size=4096)
-                
+
             print("Successful")
         except Exception as e:
             print("Could not connect to serial port, " + port)
@@ -351,7 +354,7 @@ class LockInDetection(tk.Frame):
                 actual_freq = self.teensy_clock_freq / (teensy_clk_periods
                                                             * self.sine_lut_length)
                 print('Actual frequency: ', actual_freq, ' Hz')
-            stringToSend = str(self.refSelect.get()) + ":" + str(self.freqDurVal) + ":" + str(self.sampleVal) + ":" + str(self.numPoints) + ":" + str(self.cutoff) + ":" + str(self.filterStageSelected.get()) + ":" + str(self.mode) + "F"
+            stringToSend = str(self.refSelect.get()) + ":" + str(self.freqDurVal) + ":" + str(self.sampleVal) + ":" + str(self.numPoints) + ":" + str(self.cutoff) + ":" + str(self.filterStageSelected.get()) + ":" + str(self.mode.get()) + "F"
             print("Instuction Sent:")
             print("Reference Mode: ", end="")
             if self.refSelect.get() == 0:
@@ -366,18 +369,18 @@ class LockInDetection(tk.Frame):
             print("Filter Cutoff Frequency:", self.cutoff)
             print("Filter Order:", self.filterStageSelected.get())
             print("Mode: ", end="")
-            if self.mode == 0:
+            if self.mode.get() == 0:
                 print("Normal Mode")
             else:
                 print("Fast Mode")
-            
+
             #send data
             try:
                 self.ser.write(str(stringToSend).encode('utf-8'))
             except:
                 print("writing timed out")
 
-            if self.mode == 0:
+            if self.mode.get() == 0:
                 self.processData()
             else:
                 self.processFastData()
@@ -385,21 +388,21 @@ class LockInDetection(tk.Frame):
         except:
             print("Failed in startTeensy")
             return False
-        
+
     def processFastData(self):
         try:
             waitctr = 0
             while self.ser.in_waiting == 0:
                 waitctr += 1
 
-            print(waitctr)
-            
+            #print(waitctr)
+
             #again this needs to be tested
             if self.refSelect.get() == 1:
                 externalRefFreq = str(self.ser.readline().strip())
                 externalRefFreq = externalRefFreq.strip("b'")
                 print("Measured External Reference Frequency [Hz]:", externalRefFreq)
-            
+
             d = ''
             start = time.time()
             while True:
@@ -412,7 +415,8 @@ class LockInDetection(tk.Frame):
                 if (time.time()-start > 30): #prevent infinite loop
                     break
             d = d.split(',')
-            print("Average Amplitude:", d[0], "Average Phase:", d[1])
+            print("Average Amplitude:", str(float(d[0]) * 2 * 3.3/4095))
+            print("Average Phase:", d[1])
             self.endSerial()
         except Exception as e:
             print(waitctr)
@@ -435,13 +439,13 @@ class LockInDetection(tk.Frame):
                 externalRefFreq = str(self.ser.readline().strip())
                 externalRefFreq = externalRefFreq.strip("b'")
                 print("Measured External Reference Frequency [Hz]:", externalRefFreq)
-            
+
             d = ''
             if self.numPoints > 100:
                 cutoff = self.numPoints - 100
             else:
                 cutoff = self.numPoints
-            
+
             #use a timer to prevent infinite loops
             start = time.time()
             while count < cutoff: #expecting 10000 lines of data right now
@@ -452,12 +456,12 @@ class LockInDetection(tk.Frame):
                 else:
                     data.append(d)
                     d = ''
-                    count += 1  
+                    count += 1
                     if count % 1000 == 0:
                         print(count, "lines read of 10000")
                 if (time.time() - start > 30): #if taking longer than 30 seconds
                     print("Could not read all lines")
-                    break    
+                    break
             data = data[:-1] #cutout last data point since is not actual data
             print("lines read:", len(data))
             data2D = []
@@ -502,7 +506,9 @@ class LockInDetection(tk.Frame):
         try:
             amplitudeAverage = 0
             phaseAverage = 0
-            startIdx = int((self.percent.get() / 100) * len(self.DataDf["R"]))
+            startIdx = int(((100 - int(self.percent.get()))
+                            / 100) * len(self.DataDf["R"]))
+            #print(startIdx)
             for amp in self.DataDf["R"][startIdx:]:
                 amplitudeAverage += (2*amp*3.3/4096)
             print("Average Measured Amplitude:", amplitudeAverage/len(self.DataDf["R"][startIdx:]))
@@ -511,10 +517,10 @@ class LockInDetection(tk.Frame):
             print("Average Measured Phase:", phaseAverage/len(self.DataDf["Phi"][startIdx:]))
         except:
             print("Error in calculating Averages")
-    
+
     def saveData(self):
         files = [('CSV (Comma Delimited)', '*.csv'),
-             ('All Files', '*.*'), 
+             ('All Files', '*.*'),
              ('Python Files', '*.py'),
              ('Text Document', '*.txt')]
         f = filedialog.asksaveasfile(mode = 'w', filetypes = files, defaultextension = files)
