@@ -431,8 +431,11 @@ class LockInDetection(tk.Frame):
         try:
             data = []
             count = 0
+            start = time.time()
             while self.ser.in_waiting == 0: #while nothing in serial do nothing
-                pass
+                if (time.time() - start > 60): #if taking longer than 1 min
+                    print("Nothing sent from Teensy")
+                    raise Exception("Nothing connected to serial port")
 
             #unsure if this will work for getting external ref freq - needs to be tested
             if self.refSelect.get() == 1:
