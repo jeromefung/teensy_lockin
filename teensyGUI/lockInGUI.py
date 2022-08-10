@@ -109,7 +109,7 @@ class LockInDetection(tk.Frame):
         frequencyLabel = tk.Label(frame, text="Internal Reference Frequency (Hz): " + str(self.freqDurVal))
         def internal(val, d=False):
             self.freqDurVal = val
-            frequencyLabel.config(text="Reference Frequency (Hz): " + str(self.freqDurVal))
+            frequencyLabel.config(text="Internal Reference Frequency (Hz): " + str(self.freqDurVal))
             if d:
                 self.frequencyEntry.delete(0, tk.END)
         def external(val, d=False):
