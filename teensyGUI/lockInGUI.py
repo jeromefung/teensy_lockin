@@ -254,7 +254,11 @@ class LockInDetection(tk.Frame):
 
     def createButtonWidgets(self, frame):
         #start button
-        startButton = tk.Button(frame, text="Run", font=('Arial', 15), width = 10, height = 4, command=lambda: self.startTeensy())
+        # Note: Tkinter button bg color doesn't work on Mac (known issue)
+        startButton = tk.Button(frame, text="Run", font=('Arial', 15),
+                                width = 10, height = 4,
+                                bg = '#00C800',
+                                command=lambda: self.startTeensy())
         startButton.grid(row=1, column=1, columnspan = 4, padx = 5)
         #save button
         saveButton = tk.Button(frame, text="Save Data", font=('Arial', 15), width = 10, height = 4, command=lambda: self.saveData())
