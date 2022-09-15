@@ -465,7 +465,7 @@ class LockInDetection(tk.Frame):
                     d = ''
                     count += 1
                     if count % 1000 == 0:
-                        print(count, "lines read of 10000")
+                        print(count, "lines read of " + str(self.numPoints))
                 if (time.time() - start > 30): #if taking longer than 30 seconds
                     print("Could not read all lines")
                     break
