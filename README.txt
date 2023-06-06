@@ -8,9 +8,6 @@ Teensyduino will need to be installed on the computer uploading to the teensy.
 
 The code for the gui is lockInGUI.py
 
-The GUI currently is only written for windows users, however the serial port connection code can be
-easily modified to accomodate mac and linux users. (The start serial method port variable will need to be modified)
-
 The python libraries needed to have the GUI run properly are as follows:
 tkinter - the python library used for making gui's
 pyserial - the python library for serial communication
