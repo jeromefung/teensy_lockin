@@ -6,7 +6,8 @@
 
 #include <FreqCount.h>
 
-int countPeriod_ms = 10000;
+int countPeriod_ms = 5000;
+
 unsigned long edgeCounts;
 
 // Connect one terminal of a NO pushbutton to pin 23
@@ -15,6 +16,7 @@ const uint8_t buttonPin = 23;
 
 
 void setup() {
+
   // put your setup code here, to run once:
   Serial.begin(9600); 
   pinMode(buttonPin, INPUT_PULLUP);
@@ -25,9 +27,15 @@ void setup() {
   //}
   delay(2000);
   
-  // begin counting. Signal must be connected to pin 13!
-  FreqCount.begin(countPeriod_ms);
-
+  // FreqCount on Teensy 4.x counts for interval in microseconds, not milliseconds
+  // https://forum.pjrc.com/threads/71171-Teensy-4-FreqCount-begin()-timer-units?p=313452
+  // begin counting. Signal must be connected to pin 13 on T3.5 or pin 9 on T4.0!
+  #if defined(__IMXRT1062__) // Teensy 4.x
+    FreqCount.begin(countPeriod_ms * 1000);
+  #else
+    FreqCount.begin(countPeriod_ms);
+  #endif
+  
   while (FreqCount.available() == false) {
     // wait, do nothing
   }
