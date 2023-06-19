@@ -14,10 +14,25 @@
 
 // **************************************************************
 // Pin configurations
-const uint8_t referencePin = 13;
-// Connect signal to be measured to analog pins A10/A11 (differential channel 3)
-const uint8_t pinP = A10;
-const uint8_t pinN = A11;
+
+// Teensy 3.5:
+//    FreqCount reads pin 13 for external reference
+//    Differential inputs A10/A11
+// Teensy 4.0
+//    FreqCount reads pin 9 for external reference
+//    No differential input, use A0 (digital 14)
+// TODO: fix pin assignments
+
+#if defined(ARDUINO_TEENSY40) //
+  const uint8_t referencePin = 9;
+  const uint8_t pinP = A0;
+  const uint8_t pinN;
+#else // Assume T3.5.
+  const uint8_t referencePin = 13;
+  // Connect signal to be measured to analog pins A10/A11 (differential channel 3)
+  const uint8_t pinP = A10;
+  const uint8_t pinN = A11;
+#endif
 
 // **************************************************************
 
@@ -34,7 +49,13 @@ int cutoffFreq; // = 5.0; // for LP filtering, in Hz
 unsigned long edgeCounts;
 int samplingRate; //in Hz
 int measPeriod_us;
-const int analogOutPin = A21;
+// Only T3.5 has analog out. T4.0 doesn't have A21 at all.
+#if defined(ARDUINO_TEENSY40)
+  const int analogOutPin;
+#else  
+  const int analogOutPin = A21;
+#endif
+
 long sinFreq;
 double referenceFreq;
 int filterPole;
@@ -66,34 +87,22 @@ void setup()
     // put your setup code here, to run once:
     Serial.begin(38400);
     //delay(500);
-    pinMode(pinP, INPUT);
+    pinMode(pinP, INPUT);  // TODO: block for T3.5 vs 4.0
     pinMode(pinN, INPUT);
 
-    // ADC setup
-    adc->adc0->differentialMode(); // TODO: is this needed? not sure.
-    adc->adc0->setResolution(13);  // A10, A11 connected to ADC1 only
+    // ADC setup // TODO: fix for 3.5 vs 4.0
+    #if defined(ARDUINO_TEENSY40)
+      adc->adc0->setResolution(10);
+    #else
+      adc->adc0->differentialMode(); // TODO: is this needed? not sure.
+      adc->adc0->setResolution(13);  // A10, A11 connected to ADC1 only
+      validDiff = adc->adc1->checkDifferentialPins(pinP, pinN);
+    #endif
     adc->adc0->setAveraging(0);
     adc->adc0->setConversionSpeed(ADC_CONVERSION_SPEED::HIGH_SPEED); // changes ADC clock
     adc->adc0->setSamplingSpeed(ADC_SAMPLING_SPEED::LOW_SPEED);      // change the sampling speed
-    validDiff = adc->adc1->checkDifferentialPins(pinP, pinN);
-    //delay(1000);
-
-    // test block
-    //Serial.println(countPeriod_ms);
-    //FreqCount.begin(countPeriod_ms);
-    //while (FreqCount.available() == false) {
-            // Wait; do nothing
-    //}
-    //FreqCount.end();
-    //edgeCounts = FreqCount.read();
-    //referenceFreq = edgeCounts / (double) countPeriod_ms * 1000; // convert to get Hz
-    //Serial.println("Edges: ");
-    //Serial.println(edgeCounts);
-    //Serial.println("Reference freq: ");
-    //Serial.println(referenceFreq);
-    //Serial.println(FreqCount.read());
-    // end test block
-    
+  
+     
     //get instruction from computer, program will not do anything until it knows what it needs to do
     while (!Serial.available())
     {
@@ -159,12 +168,13 @@ void loop()
 
 void generateReferenceWave()
 {
-
+#if defined(ARDUINO_TEENSY35)
     // Set up clock gate for DAC0 (connected to A21)
     // See Sec. 12.2.9 (p. 308) of manual.
     // Also see values defined in kinetis.h
     // Note |= is a C bitwise or
     SIM_SCGC2 |= SIM_SCGC2_DAC0;
+
 
     // Enable DAC0
     // See manual p. 912, Sec. 37.4.4 and kinetis.h
@@ -206,6 +216,7 @@ void generateReferenceWave()
     PDB0_SC = PDB_CONFIG | PDB_SC_LDOK;   // load registers from buffers
     PDB0_SC = PDB_CONFIG | PDB_SC_SWTRIG; // reset and restart
     PDB0_CH0C1 = 0x0101;                  // Enable pre-trigger
+#endif
 }
 
 void measureLockIn()
@@ -311,7 +322,11 @@ void extMeasISR() {
 // Function called by IntervalTimer
 void digitizeSignal()
 {
-    int result = adc->adc0->analogReadDifferential(pinP, pinN);
+    #if defined(ARDUINO_TEENSY35)
+        int result = adc->adc0->analogReadDifferential(pinP, pinN); // TODO: 3.5 vs 4.0
+    #else
+        int result = adc->adc0->analogRead(pinP);
+    #endif
     if (measCtr < nPts)
     {
         mySignal[measCtr] = (short)result;

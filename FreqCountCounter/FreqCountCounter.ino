@@ -30,7 +30,7 @@ void setup() {
   // FreqCount on Teensy 4.x counts for interval in microseconds, not milliseconds
   // https://forum.pjrc.com/threads/71171-Teensy-4-FreqCount-begin()-timer-units?p=313452
   // begin counting. Signal must be connected to pin 13 on T3.5 or pin 9 on T4.0!
-  #if defined(__IMXRT1062__) // Teensy 4.x
+  #if defined(ARDUINO_TEENSY40) // Teensy 4.x
     FreqCount.begin(countPeriod_ms * 1000);
   #else
     FreqCount.begin(countPeriod_ms);
