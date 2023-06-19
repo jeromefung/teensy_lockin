@@ -21,7 +21,6 @@
 // Teensy 4.0
 //    FreqCount reads pin 9 for external reference
 //    No differential input, use A0 (digital 14)
-// TODO: fix pin assignments
 
 #if defined(ARDUINO_TEENSY40) //
   const uint8_t referencePin = 9;
@@ -38,6 +37,7 @@
 
 // **************************************************************
 // Global variables -- user set
+// Note: FreqCount on T4.0 uses count period in microsceconds
 unsigned long countPeriod_ms = 5000; // Count duration for reference frequency measurement
 const int maxPts = 50000;
 int nPts = 10000;
@@ -87,10 +87,12 @@ void setup()
     // put your setup code here, to run once:
     Serial.begin(38400);
     //delay(500);
-    pinMode(pinP, INPUT);  // TODO: block for T3.5 vs 4.0
-    pinMode(pinN, INPUT);
+    pinMode(pinP, INPUT);  
+    #if defined(ARDUINO_TEENSY35)
+        pinMode(pinN, INPUT);
+    #endif
 
-    // ADC setup // TODO: fix for 3.5 vs 4.0
+    // ADC setup 
     #if defined(ARDUINO_TEENSY40)
       adc->adc0->setResolution(10);
     #else
@@ -236,7 +238,11 @@ void measureLockIn()
     // Otherwise phase info is meaningless.
     if(externalFlag){
       // Measure reference frequency
-        FreqCount.begin(countPeriod_ms);
+        #if defined(ARDUINO_TEENSY40) // T4.0 uses period in microseconds
+          FreqCount.begin(countPeriod_ms * 1000);
+        #else 
+          FreqCount.begin(countPeriod_ms);
+        #endif
         while (FreqCount.available() == false) {
             // Wait; do nothing
         }
@@ -323,7 +329,7 @@ void extMeasISR() {
 void digitizeSignal()
 {
     #if defined(ARDUINO_TEENSY35)
-        int result = adc->adc0->analogReadDifferential(pinP, pinN); // TODO: 3.5 vs 4.0
+        int result = adc->adc0->analogReadDifferential(pinP, pinN); // 
     #else
         int result = adc->adc0->analogRead(pinP);
     #endif
