@@ -431,7 +431,6 @@ void mixAndFilterFast(){
                 yregY[coeffCtr] = yregY[coeffCtr - 1];
             }
         }
-        delay(2);
     }
 
     rAvg = rAvg / ((double)nPts);
