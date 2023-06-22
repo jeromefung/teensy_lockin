@@ -1,4 +1,4 @@
-#include "SineLUT.h"
+#include "src/SineLUT.h"
 #include <DMAChannel.h>
 #include <ADC.h>
 #include <math.h>
