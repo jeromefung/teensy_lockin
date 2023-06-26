@@ -30,4 +30,4 @@ As shown in the figure below, using FreqCount on Teensy 4.0 requires the externa
 
 ![Schematic showing connections to Teensy 4.0 in internal reference mode](./img/teensy_40_external.jpg)
 
-Note that a 5 V square wave reference signal cannot safely be directly connected to the Teensy 4.0. While there are many ways to step the reference signal down (a simple resistive divider may be adequate for slow signals), an easy-to-use integrated circuit that can reliably perform this task is the [74LVC245](https://www.ti.com/lit/gpn/sn74lvc245a).
+Note that a 5 V square wave reference signal cannot safely be directly connected to the Teensy 4.0. While there are many ways to step the reference signal down (a simple resistive divider may be adequate for slow signals), an easy-to-use integrated circuit that can reliably perform this task is the [74LVC245](https://www.ti.com/lit/gpn/sn74lvc245a). While not shown in the figure, a capacitor may be needed across pins 9 and ground to quiet spurious analog ringing.

@@ -12,10 +12,10 @@
 
 \input{teensy_40}
 
-\draw let \p{A} = (IC.bpin 1), \p{B} = (IC.bpin 10) in
+\draw let \p{A} = (IC.bpin 1), \p{B} = (IC.bpin 11) in
   (IC.bpin 1)   to [short, -] ++(0, -1)
   to [esource, name = extRef] ++({(\x{B} - \x{A})}, 0) 
-  -| (IC.bpin 10)
+  -| (IC.bpin 11)
   
 %  (IC.bpin 1) ++ (0, -1) 
 %  to [short, -] ++(0, -1.5)
