@@ -1,0 +1,60 @@
+\ctikzset{multipoles/dipchip/pin spacing=0.48}
+
+
+\draw(0,0) node[dipchip, rotate = 90,
+                          num pins = 70, hide numbers, external pins width=0](IC){
+                          \rotatebox{-90}{Teensy 3.5}};
+
+\node[above, font=\tiny] at (IC.bpin 1) {VIN};                       
+\node[above, font=\tiny] at (IC.bpin 2) {GND};                       
+\node[above, font=\tiny] at (IC.bpin 3) {3V3}; 
+\node[above, font=\tiny] at (IC.bpin 4) {AREF}; 
+
+% plain digital pins 0 - 13
+\foreach \x in {5, ...,18} % x is the pin positions
+   \pgfmathsetmacro \y{int(\x-5)}
+    \node[above, font=\tiny] at (IC.bpin \x ) {\y};
+
+% digital 14 - 23 are analog 0 - 9
+\foreach \x in {19, ..., 28} % \x is the pin positions
+     \pgfmathsetmacro \y {int(\x -5) } % digital name
+     \pgfmathsetmacro \z {int (\x - 19)}  % analog name
+     \node[above, font=\tiny, align=center, text width = 4pt] at (IC.bpin \x) {\y/ \\ A\z};
+
+% plain digital pins 24 - 30
+\foreach \x in {29, ..., 35} % x is the pin positions
+   \pgfmathsetmacro \y{int(\x-5)}
+    \node[above, font=\tiny] at (IC.bpin \x ) {\y};
+
+% Pin 36 blank!!
+
+\node[below, font=\tiny] at (IC.bpin 37) {A10}; 
+\node[below, font=\tiny] at (IC.bpin 38) {A11}; 
+
+% digital 31 - 39 are analog 12 - 20
+\foreach \x in {39, ..., 47} % \x is the pin positions
+     \pgfmathsetmacro \y {int(\x -8) } % digital name
+     \pgfmathsetmacro \z {int (\x - 27)}  % analog name
+     \node[below, font=\tiny, align=center, text width = 4pt] at (IC.bpin \x) {\y/ \\ A\z};
+
+\node[below, font=\tiny, align=center, text width = 4pt] at (IC.bpin 48) {A \\ GND};
+\node[below, font=\tiny, align=center, text width = 4pt] at (IC.bpin 49) {A21/ \\ DAC0} ;
+\node[below, font=\tiny, align=center, text width = 4pt] at (IC.bpin 50) {A22/ \\ DAC1} ;
+
+
+% plain digital pins 40 - 48
+\foreach \x in {51, ..., 59} % x is the pin positions
+   \pgfmathsetmacro \y{int(\x-11)}
+    \node[below, font=\tiny] at (IC.bpin \x ) {\y};
+
+\node[below, font=\tiny, align=center, text width = 4pt] at (IC.bpin 60) {49/ \\ A23} ;
+\node[below, font=\tiny, align=center, text width = 4pt] at (IC.bpin 61) {50/ \\ A24} ;
+
+% plain digital pins 51 - 57
+\foreach \x in {62, ..., 68} % x is the pin positions
+   \pgfmathsetmacro \y{int(\x-11)}
+    \node[below, font=\tiny] at (IC.bpin \x ) {\y};
+   
+\node[below, font=\tiny, align=center, text width = 4pt] at (IC.bpin 69) {A25} ;
+\node[below, font=\tiny, align=center, text width = 4pt] at (IC.bpin 70) {A26} ; 
+

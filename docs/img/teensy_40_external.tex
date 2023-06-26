@@ -1,0 +1,63 @@
+\documentclass[10pt]{standalone}
+\usepackage{siunitx}
+\usepackage{tikz}
+\usetikzlibrary{calc}
+\usepackage[american, siunitx]{circuitikz}
+
+\listfiles
+
+\begin{document}
+
+\begin{circuitikz}[scale=0.72, transform shape]
+
+\input{teensy_40}
+
+\draw let \p{A} = (IC.bpin 1), \p{B} = (IC.bpin 10) in
+  (IC.bpin 1)   to [short, -] ++(0, -1)
+  to [esource, name = extRef] ++({(\x{B} - \x{A})}, 0) 
+  -| (IC.bpin 10)
+  
+%  (IC.bpin 1) ++ (0, -1) 
+%  to [short, -] ++(0, -1.5)
+%  to [capacitor, l_ = $\SI{10}{\pico\farad}$, font =\footnotesize] ++({(\x{B} - \x{A})}, 0) 
+%  -| (IC.bpin 10)
+  ;
+%
+\tikzset{
+  sqwave/.pic = {
+  \draw[thick] (-0.2, -0.1) -- ++ (0, 0.2)  -- ++ (0.1, 0) -- ++(0, -0.2) --  ++(0.1, 0)  -- ++(0, 0.2) -- ++(0.1, 0) -- ++ (0, -0.2) -- ++ (0.1, 0) -- ++ (0, 0.2) -- ++(0.1, 0) ;
+  }
+}
+%
+\pic at (extRef) {sqwave};  
+\node[yshift = -6mm, font = \footnotesize] at (extRef) {Reference signal}  ;
+%
+%%\draw let \p{A} = (IC.bpin 37), \p{B} = (IC.bpin 38) in
+%%  (IC.bpin 38)   to [short, -] ++(0, 1)
+%%  to [esource, name = extRef] ++({(\x{A} - \x{B})}, 0) 
+%%  %-| (IC.bpin 38)
+%%  
+%%
+%%  ;
+%
+
+\draw let \p{A} = (IC.bpin 16), \p{B} = (IC.bpin 27) in
+      (IC.bpin 27) to [short, -] ++(0, 0.75)
+      to [esource, name=intSig] ++({(\x{A} - \x{B})},0)
+   -| (IC.bpin 16);
+
+\tikzset{
+  signal/.pic = {
+  \draw plot[smooth] file {noisy_sine.txt} ;
+   }
+}
+
+\pic at (intSig) {signal};  
+ 
+\node[yshift = 6mm, font=\footnotesize] at (intSig) {Signal of interest};  
+%
+%\node[yshift = 15mm, xshift = -2mm, anchor=west, font=\large] at (IC.bpin 70) {(a) External reference} ;
+
+\end{circuitikz}
+
+\end{document}

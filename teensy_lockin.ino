@@ -86,10 +86,15 @@ void setup()
 {
     // put your setup code here, to run once:
     Serial.begin(38400);
-    //delay(500);
-    pinMode(pinP, INPUT);  
+    
     #if defined(ARDUINO_TEENSY35)
+        pinMode(pinP, INPUT);
         pinMode(pinN, INPUT);
+    #else // T4.0
+        // See forum discussions:
+        // https://forum.pjrc.com/threads/34319-Analog-input-impedance-and-pull-up
+        // https://forum.pjrc.com/threads/69671-Teensy-4-0-4-1-web-pages-need-a-warning-about-INPUT_DISABLE-on-Analog-Inputs
+        pinMode(pinP, INPUT_DISABLE);
     #endif
 
     // ADC setup 
