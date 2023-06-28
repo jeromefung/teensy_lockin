@@ -3,14 +3,6 @@
 *.m~
 *.asv
 *.pyc
-teensyGUI/debuggingDataTest.txt
-teensyGUI/interprettingTeensyDataTest.py
-teensyGUI/SerialTest.java
-/SerialTesting
-teensyGUI/serial_communication/*
-teensyGUI/testResults/*
-
-octave-workspace
-
+*.pyo
 .DS_Store
 

@@ -1,0 +1,41 @@
+\documentclass[10pt]{standalone}
+\usepackage{siunitx}
+\usepackage{tikz}
+\usetikzlibrary{calc}
+\usepackage[american, siunitx]{circuitikz}
+
+\listfiles
+
+\begin{document}
+
+\begin{circuitikz}[scale=0.72, transform shape]
+
+\input{teensy}
+
+\draw (6.5,3) node[qfpchip, num pins = 12, hide numbers,
+   external pins width = 0, no topmark](DUT) {} ;
+
+\draw (IC.bpin 49) |- (DUT.pin 1)
+  (IC.bpin 48) |- (DUT.pin 3)
+  (DUT.pin 9) -| (IC.bpin 37)
+  (DUT.pin 7) -| (IC.bpin 38);
+
+\node[right, font=\tiny] at (DUT.pin 2) {Input};
+\node[right, font=\tiny] at (DUT.pin 1) {$+$};
+\node[right, font=\tiny] at (DUT.pin 3) {$-$};
+\node[left, font=\tiny] at (DUT.pin 8) {Output};
+\node[left, font=\tiny] at (DUT.pin 9) {$+$};
+\node[left, font=\tiny] at (DUT.pin 7) {$-$};
+\node[below, font=\footnotesize, yshift = -2mm] at (DUT.pin 5) {Device under test} ; 
+
+
+
+
+\node[yshift = 28mm, xshift = -2mm, anchor=west, font=\large] at (IC.bpin 70) {(b) Internal reference} ;
+
+% pad a little
+\node at (0, 4.5) {};
+
+\end{circuitikz}
+
+\end{document}
