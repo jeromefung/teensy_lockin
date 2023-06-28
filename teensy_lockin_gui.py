@@ -564,7 +564,9 @@ class LockInDetection(tk.Frame):
              ('Text Document', '*.txt')]
         f = filedialog.asksaveasfile(mode = 'w', filetypes = files, defaultextension = files)
         try:
-            f.write(self.DataDf.to_csv())
+            out_df = self.DataDf.copy()
+            out_df['R'] = 2*out_df['R']
+            f.write(out_df.to_csv())
             print("file saved")
         except:
             pass
