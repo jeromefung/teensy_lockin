@@ -219,7 +219,7 @@ class LockInDetection(tk.Frame):
         self.filterCutoffEntry.grid(row=r, column=1, columnspan=4)
         self.filterCutoffEntry.bind("<Return>", lambda event: updateCutoff(self.filterCutoffEntry.get()))
         r+=1
-        filterStageLabel = tk.Label(frame, text="Filter Order:")
+        filterStageLabel = tk.Label(frame, text="Filter Stages:")
         filterStageLabel.grid(row = r, column = 2, sticky=tk.W+tk.E)
         filterStageOptions = [1, 2, 3, 4]
         self.filterStageSelected = tk.IntVar()
