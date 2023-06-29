@@ -439,6 +439,10 @@ class LockInDetection(tk.Frame):
                 if (time.time()-start > 30): #prevent infinite loop
                     break
             d = d.split(',')
+
+            # Tell Teensy to reset itself
+            self.ser.write(str("DRX").encode('utf-8'))
+
             if self.teensyModel.get() == 'T40':
                 print("Average Amplitude:", str(float(d[0]) * 2 * 3.3/1023))
             else:
@@ -494,6 +498,10 @@ class LockInDetection(tk.Frame):
                     break
             data = data[:-1] #cutout last data point since is not actual data
             print("lines read:", len(data))
+
+            # Send a string "data recieved" to tell Teensy to reset
+            self.ser.write(str("DRX").encode('utf-8'))
+
             data2D = []
             for i in range(len(data)): #convert from bytes to floats for each data point
                 try:
