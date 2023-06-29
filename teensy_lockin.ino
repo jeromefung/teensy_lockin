@@ -565,6 +565,6 @@ void mixAndFilter()
                 yregY[coeffCtr] = yregY[coeffCtr - 1];
             }
         }
-        delayMicroseconds(100);
+        delayMicroseconds(50);
     }
 }
