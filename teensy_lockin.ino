@@ -87,6 +87,7 @@ void setup()
     // put your setup code here, to run once:
     Serial.begin(38400);
     
+    //pinMode(LED_BUILTIN, OUTPUT);
     #if defined(ARDUINO_TEENSY35)
         pinMode(pinP, INPUT);
         pinMode(pinN, INPUT);
@@ -116,6 +117,9 @@ void setup()
     } // wait for instruction to be sent
     char receivedChar;
     int index = 0;
+
+    int maxWait = 0;
+
     while (Serial.available() && receivedChar != "F")
     {
         receivedChar = Serial.read();
@@ -157,15 +161,33 @@ void setup()
     if (nPts > maxPts){
         nPts = maxPts;
     }
-    delay(1000);
+ 
     measureLockIn();
+
+    // Need to wait until host computer is able to read transmitted data
+    // Set a max waiting time
+    // Reset if max waiting time exceeded OR host signals successful read
+
     if (fastMode == 1){
-        delay(2000);
+      maxWait = 5000;
     }
     else{
-        delay((nPts / 2) + 2000); //unsure if this will be too fast at low nPts - ideally have function that converts nPts to time
-        // - need measurement of how fast teensy writes compared to how fast pc reads
+      maxWait = nPts + 5000;
     }
+
+    index = 0;
+    elapsedMillis transmit_wait;
+
+    while (transmit_wait < maxWait){
+      if (Serial.available()) {
+        receivedChar = Serial.read();
+      }
+      
+      if (receivedChar == 'X') {
+          break;
+      }
+    }
+    
     WRITE_RESTART(0x5FA0004);
 }
 
@@ -543,6 +565,6 @@ void mixAndFilter()
                 yregY[coeffCtr] = yregY[coeffCtr - 1];
             }
         }
-        delayMicroseconds(100);
+        delayMicroseconds(150);
     }
 }
