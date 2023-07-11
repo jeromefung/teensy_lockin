@@ -18,13 +18,15 @@ teensy_lockin has been tested on both Windows and Mac OS.
 * [Teensyduino](https://www.pjrc.com/teensy/teensyduino.html) and the following core libraries installed by default with Teensyduino:
     * [FreqCount](https://www.pjrc.com/teensy/td_libs_FreqCount.html)
     * DMAChannel (for [Teensy 3.5](https://github.com/PaulStoffregen/cores/blob/master/teensy3/DMAChannel.h) or [Teensy 4.0](https://github.com/PaulStoffregen/cores/blob/master/teensy4/DMAChannel.h))
+    * [ADC](https://github.com/pedvide/ADC)
 
-* [ADC](https://github.com/pedvide/ADC)
+
 * Python 3
 * [PySerial](https://github.com/pyserial/pyserial)
 * [Pandas](https://pandas.pydata.org/)
 * [Matplotlib](https://matplotlib.org/)
 
+Binary executables for the graphical user interface (which could be used without installing Python) are currently not available. If you are interested in binaries, please open an issue.
 
 ## Installation and usage
 
@@ -33,6 +35,9 @@ Compile and upload `teensy_lockin.ino` to your Teensy. Make the [hardware connec
 ```bash
 python teensy_lockin_gui.py
 ```
+
+For more details on using `teensy_lockin_gui.py`, please see its [documentation](docs/software.md).
+
 
 ## Contributing
 Pull requests are welcome. If you would like to make major changes, please discuss first by opening an issue.
