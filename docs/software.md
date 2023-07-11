@@ -38,5 +38,17 @@ After the digitized signal is mixed with the reference signal, it is low-pass fi
 
 #### Post Processing Settings
 
+In *Normal Mode*, the complete digitized signal as well as the output of phase-sensitive detection (including the amplitude and phase) are returned to the host computer, as well as average values of the amplitude and phase. In *Fast Mode*, only the average values are returned. The slider controls the fraction of the collected points that are used to compute the averages (namely, the last *n*% of the points, where *n* is the value set by the slider).
+
+#### Collecting data
+
+Click *Run* to begin data collection. Note that in external reference mode, the Teensy will first monitor the reference signal for the user-specified period before digitizing the signal of interest.
+
 
 ### After collecting data
+
+If you are using *Fast Mode*, the results will be displayed in the output window at the lower right.
+
+In *Normal Mode*, graphs of the raw digitized signal, the output amplitude, and the output phase will also automatically be displayed, in separate windows.
+
+In addition, in *Normal Mode*, click the *Save Data* button to save the collected signals as a CSV file.
